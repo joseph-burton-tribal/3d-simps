@@ -21,7 +21,11 @@ function App() {
   return (
     <>
       <section id="center">
-        <ThreeDBase configId="audi-test" market="GBR" />
+        <ThreeDBase
+          configId="v-3DExhibition-default-2025"
+          market="DEU"
+          streamingStage="prod-euw1"
+        />
       </section>
     </>
   );
