@@ -6,10 +6,11 @@ import {
   type HTMLAttributes,
   type Ref,
 } from "react";
-import { buildPrString, parseConfiguratorUrl } from "./configurator";
-
-// Configurator vehicle presets
-// www.volkswagen.co.uk/en/new.html?---=%7B%22configurator_featureAppSection%22%3A%22%2F30260%2Flife%3FcarlineId%3D30260%26modelId%3DCS13AV%2524GPF2PF2%2524GPF3PF3%2524GPJAPJA%2524GP18P18%2524MSNRS2D%2524GWD1WD1%2524GWLAWLA%2524GYOSYOS%2524GZBPZBP%26modelVersion%3D1%26modelYear%3D2027%26salesGroupId%3D36799%26category%3Dprivate%26trimName%3DLife%26exteriorId%3DF14%2BP8P8%26interiorId%3DF56%2B%2B%2B%2B%2BEL%26buildabilityStatus%3Dbuildable%22%7D
+import {
+  buildPrString,
+  parseConfiguratorUrl,
+  type ParsedConfigurator,
+} from "./configurator";
 
 const VEHICLE_PRESETS = [
   {
@@ -25,7 +26,7 @@ const VEHICLE_PRESETS = [
     url: "https://www.volkswagen.co.uk/en/configurator.html/__app/golf-hatch/life.app?---=%7B%22configuration-step-navigation-service%22%3A%22%2F%3FconfigStep%3D%257B%2522context%2522%253A%252230602-36687-Life%2522%252C%2522selectedStep%2522%253A%2522interior%2522%257D%22%7D&carlineId-app=30602&modelId-app=DA13BX%24MBTSBZ2%24GPG4PG4%24GPU2PU2%24GP18P18%24GRDARDA%24GYOSYOS&modelVersion-app=1&modelYear-app=2027&salesGroupId-app=36687&category-app=private&trimName-app=Life&exteriorId-app=F14+0R0R&interiorId-app=F56+++++BD&buildabilityStatus-app=buildable",
   },
   {
-    name: "Taigo. Match",
+    name: "Taigo. Life",
     url: "https://www.volkswagen.co.uk/en/configurator.html/__app/30260/life.app?---=%7B%22configuration-step-navigation-service%22%3A%22%2F%3FconfigStep%3D%257B%2522context%2522%253A%252230260-36799-Life%2522%252C%2522selectedStep%2522%253A%2522exterior%2522%257D%22%7D&carlineId-app=30260&modelId-app=CS13AV%24GPF2PF2%24GPF3PF3%24GPJAPJA%24GP18P18%24MSNRS2D%24GWD1WD1%24GWLAWLA%24GYOSYOS%24GZBPZBP&modelVersion-app=1&modelYear-app=2027&salesGroupId-app=36799&category-app=private&trimName-app=Life&exteriorId-app=F14+P8P8&interiorId-app=F56+++++EL&buildabilityStatus-app=buildable",
   },
 ];
@@ -45,6 +46,7 @@ type DeckAttributes = HTMLAttributes<HTMLElement> & {
   "multisession-disconnect"?: boolean;
 };
 
+// Let TypeScript check the AVP custom element in JSX.
 declare module "react" {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
@@ -54,20 +56,29 @@ declare module "react" {
   }
 }
 
-interface DeckProps {
-  configId: string;
-  market: string;
-  streamingStage: string;
-}
-
-export const ThreeDBase = ({ configId, market, streamingStage }: DeckProps) => {
+export const ThreeDBase = () => {
   const deckRef = useRef<HTMLElement | null>(null);
   const [active, setActive] = useState(false);
   const [configuratorUrl, setConfiguratorUrl] = useState("");
-  const [prString, setPrString] = useState(DEFAULT_PR_STRING);
-  const [vehicleSummary, setVehicleSummary] = useState("");
+  const [appliedConfig, setAppliedConfig] = useState<ParsedConfigurator | null>(
+    null,
+  );
   const [error, setError] = useState("");
   const [streamError, setStreamError] = useState("");
+
+  console.log(configuratorUrl);
+  console.log(appliedConfig);
+  // Editing the URL does not change the vehicle until the form is submitted.
+  const prString = appliedConfig
+    ? buildPrString(appliedConfig)
+    : DEFAULT_PR_STRING;
+
+  const vehicleSummary = appliedConfig
+    ? `${appliedConfig.trimName} · ${appliedConfig.modelId} · ${appliedConfig.modelYear}`
+    : "";
+
+  const presetUrl =
+    VEHICLE_PRESETS.find((preset) => preset.url === configuratorUrl)?.url ?? "";
 
   useEffect(() => {
     const deck = deckRef.current;
@@ -88,30 +99,48 @@ export const ThreeDBase = ({ configId, market, streamingStage }: DeckProps) => {
       const fallback =
         typeof payload === "string"
           ? payload
-          : "The AVP stream could not start. Check that this vehicle is available.";
+          : "The AVP stream could not start. Please try again.";
 
       setStreamError([code, message].filter(Boolean).join(": ") || fallback);
       setActive(false);
     };
 
+    // AVP can stop the stream itself, for example after an inactivity timeout.
+    const handleActiveChange = (event: Event) => {
+      const detail = (event as CustomEvent<unknown>).detail;
+      console.log("handleActiveChange", detail);
+      if (
+        typeof detail === "object" &&
+        detail !== null &&
+        "value" in detail &&
+        typeof detail.value === "boolean"
+      ) {
+        setActive(detail.value);
+      }
+    };
+
     deck.addEventListener("error", handleStreamError);
     deck.addEventListener("exception", handleStreamError);
+    deck.addEventListener("update:active", handleActiveChange);
     return () => {
       deck.removeEventListener("error", handleStreamError);
       deck.removeEventListener("exception", handleStreamError);
+      deck.removeEventListener("update:active", handleActiveChange);
     };
   }, []);
+
+  const handleUrlChange = (value: string) => {
+    setConfiguratorUrl(value);
+    setError("");
+  };
 
   const handleConfiguratorSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
 
     try {
-      const config = parseConfiguratorUrl(configuratorUrl);
-      setPrString(buildPrString(config));
-      setVehicleSummary(
-        `${config.trimName} · ${config.modelId} · ${config.modelYear}`,
-      );
+      setAppliedConfig(parseConfiguratorUrl(configuratorUrl));
+      setStreamError("");
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -123,8 +152,7 @@ export const ThreeDBase = ({ configId, market, streamingStage }: DeckProps) => {
 
   const handleReset = () => {
     setConfiguratorUrl("");
-    setPrString(DEFAULT_PR_STRING);
-    setVehicleSummary("");
+    setAppliedConfig(null);
     setError("");
     setStreamError("");
   };
@@ -142,15 +170,8 @@ export const ThreeDBase = ({ configId, market, streamingStage }: DeckProps) => {
           <label htmlFor="vehicle-preset">Vehicle</label>
           <select
             id="vehicle-preset"
-            value={
-              VEHICLE_PRESETS.some((preset) => preset.url === configuratorUrl)
-                ? configuratorUrl
-                : ""
-            }
-            onChange={(event) => {
-              setConfiguratorUrl(event.target.value);
-              setError("");
-            }}
+            value={presetUrl}
+            onChange={(event) => handleUrlChange(event.target.value)}
           >
             <option value="" disabled>
               Select a vehicle
@@ -165,7 +186,7 @@ export const ThreeDBase = ({ configId, market, streamingStage }: DeckProps) => {
           <textarea
             id="configurator-url"
             value={configuratorUrl}
-            onChange={(event) => setConfiguratorUrl(event.target.value)}
+            onChange={(event) => handleUrlChange(event.target.value)}
             placeholder="Paste a Volkswagen configurator URL"
             rows={5}
             required
@@ -201,9 +222,9 @@ export const ThreeDBase = ({ configId, market, streamingStage }: DeckProps) => {
       <div className="vehicle-stage" aria-label="3D vehicle">
         <avp-3dws-deck
           ref={deckRef}
-          config-id={configId}
-          market={market}
-          streaming-stage={streamingStage}
+          config-id="v-3DExhibition-default-2025"
+          market="DEU"
+          streaming-stage="prod-euw1"
           multisession-disconnect
           features='{"showroomPro":true}'
           active={active}

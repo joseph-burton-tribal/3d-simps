@@ -9,6 +9,11 @@ export interface ParsedConfigurator {
   prCodes: string[];
 }
 
+/**
+ * Removes spaces from a paint or interior selection. When a prefix consisting
+ * of one letter and two digits is followed by a separate code, drops the prefix.
+ * For example, "F14 R1R1" becomes "R1R1" and "F56     ZA" becomes "ZA".
+ */
 function extractSelectionCode(value: string): string {
   const tokens = value.trim().split(/\s+/).filter(Boolean);
   if (tokens.length > 1 && /^[A-Z]\d{2}$/i.test(tokens[0])) {
@@ -17,6 +22,12 @@ function extractSelectionCode(value: string): string {
   return tokens.join("");
 }
 
+/**
+ * Trims an option token from modelId-app. For the seven-character tokens
+ * starting with uppercase M or G used in the supplied URLs, keeps the last
+ * three characters: "GPJ1PJ1" becomes "PJ1" and "MRUFNZ4" becomes "NZ4".
+ * Leaves other trimmed tokens unchanged.
+ */
 function decodePrToken(token: string): string {
   const clean = token.trim();
   if (clean.length === 7 && (clean[0] === "M" || clean[0] === "G")) {
@@ -25,6 +36,16 @@ function decodePrToken(token: string): string {
   return clean;
 }
 
+/**
+ * Reads vehicle details from the URL's -app query parameters. URLSearchParams
+ * decodes encoded values and turns + into spaces. The first $-separated part
+ * of modelId-app is the model; the remaining parts contain option codes.
+ * Cleans the selection and option codes, then removes duplicate option codes
+ * regardless of letter case, keeping the spelling from the last occurrence.
+ * Falls back to the carline ID for a missing sales group and the model ID for
+ * a missing trim name. Throws if URL parsing fails or required details are
+ * missing. Does not verify the website's hostname or vehicle availability.
+ */
 export function parseConfiguratorUrl(rawUrl: string): ParsedConfigurator {
   let url: URL;
   try {
@@ -48,11 +69,7 @@ export function parseConfiguratorUrl(rawUrl: string): ParsedConfigurator {
     );
   }
 
-  const optionTokens = (params.get("options-app") || "")
-    .split(/[-$,]+/)
-    .map(decodePrToken)
-    .filter(Boolean);
-  const prCodes = [...modelParts.slice(1).map(decodePrToken), ...optionTokens];
+  const prCodes = modelParts.slice(1).map(decodePrToken);
   const uniquePrCodes = [
     ...new Map(prCodes.map((code) => [code.toLowerCase(), code])).values(),
   ];
@@ -69,6 +86,11 @@ export function parseConfiguratorUrl(rawUrl: string): ParsedConfigurator {
   };
 }
 
+/**
+ * Builds the viewer's comma-separated configuration string in this order:
+ * sales group (or carline ID if missing), model, year, paint, interior, then
+ * option codes. Leaves out empty values; does not validate the configuration.
+ */
 export function buildPrString(config: ParsedConfigurator): string {
   return [
     config.salesGroupId || config.carlineId,
