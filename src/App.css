@@ -140,12 +140,6 @@
   cursor: pointer;
 }
 
-.vehicle-controls button[type="submit"] {
-  color: #fff;
-  background: var(--accent);
-  border-color: var(--accent);
-}
-
 .vehicle-controls button:hover:not(:disabled) {
   border-color: var(--accent);
 }
@@ -155,15 +149,103 @@
   cursor: default;
 }
 
-.vehicle-controls :is(button, textarea, select):focus-visible {
+.vehicle-controls :is(button, select):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
-.stream-controls {
+.stream-controls,
+.event-controls {
   margin-top: 24px;
   padding-top: 20px;
   border-top: 1px solid var(--border);
+}
+
+.stream-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.stream-status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: #748078;
+}
+
+.stream-status[data-state="starting"]::before {
+  background: #a56b08;
+}
+
+.stream-status[data-state="connected"]::before {
+  background: #267c9b;
+}
+
+.stream-status[data-state="ready"]::before {
+  background: var(--accent);
+}
+
+.stream-status[data-state="error"]::before {
+  background: #b42318;
+}
+
+.stream-details {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 12px;
+  margin: 12px 0 16px;
+  font-size: 12px;
+}
+
+.stream-details dd {
+  margin: 0;
+  color: var(--text-h);
+  overflow-wrap: anywhere;
+}
+
+.event-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.event-heading h2 {
+  margin: 0;
+}
+
+.event-history {
+  max-height: 240px;
+  overflow: auto;
+  font-size: 12px;
+}
+
+.event-history details {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.event-history summary {
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.event-history time {
+  margin-right: 8px;
+  color: var(--text);
+}
+
+.event-history pre {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: 11px/1.5 var(--mono);
 }
 
 .vehicle-controls [role="alert"] {
@@ -195,20 +277,20 @@
   }
 }
 
-.configurator-form {
+.vehicle-selection {
   display: grid;
   gap: 10px;
   width: 100%;
   text-align: left;
 }
 
-.configurator-form label {
+.vehicle-selection label {
   color: var(--text-h);
   font-size: 15px;
   font-weight: 600;
 }
 
-.configurator-form select {
+.vehicle-selection select {
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
@@ -218,30 +300,6 @@
   color: var(--text-h);
   background: var(--bg);
   font: inherit;
-}
-
-.configurator-form textarea {
-  box-sizing: border-box;
-  width: 100%;
-  resize: vertical;
-  min-height: 100px;
-  max-height: 240px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--text-h);
-  background: var(--bg);
-  font: 14px/1.45 var(--mono);
-}
-
-.configurator-form [role="alert"] {
-  color: #b42318;
-  font-size: 14px;
-}
-
-.configurator-form [aria-live="polite"] {
-  color: var(--text);
-  font-size: 14px;
 }
 
 #next-steps {

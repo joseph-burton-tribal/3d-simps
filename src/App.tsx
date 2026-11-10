@@ -1,27 +1,23 @@
-import { useEffect } from "react";
 import "./App.css";
 
 import ThreeDBase from "./components/ThreeDBase/";
+import { useDeckScript } from "./hooks/useDeckScript";
 
 function App() {
-  useEffect(() => {
-    const script = document.createElement("script");
-
-    script.src =
-      "https://avp-3dws-deck.eu-west-1-web-streaming.avp.tech/avp-3dws-deck.js";
-    script.type = "module";
-
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
+  const scriptStatus = useDeckScript();
 
   return (
     <>
       <section id="center">
-        <ThreeDBase />
+        {scriptStatus === "ready" ? (
+          <ThreeDBase />
+        ) : scriptStatus === "error" ? (
+          <p role="alert">
+            Unable to load the AVP viewer. Check your connection and reload.
+          </p>
+        ) : (
+          <p role="status">Loading viewer...</p>
+        )}
       </section>
     </>
   );

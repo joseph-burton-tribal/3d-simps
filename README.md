@@ -15,61 +15,45 @@ The React Compiler is not enabled on this template because of its impact on dev 
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-```js
+````js
 export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+  # 3D Vehicle Viewer
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+  A React and TypeScript proof of concept using the AVP streaming web component.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+  ## Run
 
+  ```sh
+  npm install
+  npm run dev
+````
+
+Open the local URL printed by Vite. Choose one of the four Audi presets and
+click **Start stream**. Changing the selection sends the preset's exact PR string
+to the viewer immediately. **Reset** selects the first preset; it does not stop
+an active stream. Use **Stop stream** to disconnect.
+
+## Code
+
+- `src/components/ThreeDBase/presets.ts` contains the preset IDs, labels, and PR strings.
+- `src/components/ThreeDBase/ThreeDBase.tsx` manages selection, stream controls, and AVP events.
+- `src/App.tsx` loads the external AVP script.
+
+The viewer uses the `audi-test` demo configuration and its `prelive-euw1` stage.
+It explicitly requests the listed `MRV1` camera instead of the demo configuration's
+invalid initial camera. Other camera behavior follows the demo defaults. These are demo
+settings, not a production configuration. Streaming still depends on AVP access,
+network connectivity, and available rendering capacity. The enabled Showroom Pro
+feature also depends on its separate API and authentication service.
+
+Configurator URLs are no longer accepted or parsed. PR strings are passed to AVP
+unchanged, including custom tokens such as `LC_PR_AEEXC034`.
+
+## Checks
+
+```sh
+npm run build
+npm run lint
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
     extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
