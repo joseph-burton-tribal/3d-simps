@@ -1,9 +1,6 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { VEHICLE_PRESETS } from "../data/presets";
-import type {
-  EventEntry,
-  StreamStatus,
-} from "../components/ThreeDBase/deckTypes";
+import type { EventEntry, StreamStatus } from "../components/Deck/deckTypes";
 
 const MAX_EVENTS = 20;
 
@@ -82,12 +79,14 @@ export function useDeck() {
   // Deck events are native CustomEvents; their payload is in event.detail.
   const handleDeckEvent = useEffectEvent((event: Event) => {
     const payload = (event as CustomEvent<unknown>).detail;
+
     const detail =
       typeof payload === "object" && payload !== null
         ? (payload as Record<string, unknown>)
         : {};
+
     recordEvent("Deck", event.type, payload);
-    console.log("Deck event received:", event.type, payload);
+
     switch (event.type) {
       case "connected":
         setStatus("connected");

@@ -1,6 +1,6 @@
 import "./App.css";
 
-import ThreeDBase from "./components/ThreeDBase/";
+import Deck from "./components/Deck/";
 import { useDeckScript } from "./hooks/useDeckScript";
 
 function App() {
@@ -10,7 +10,7 @@ function App() {
     <>
       <section id="center">
         {scriptStatus === "ready" ? (
-          <ThreeDBase />
+          <Deck />
         ) : scriptStatus === "error" ? (
           <p role="alert">
             Unable to load the AVP viewer. Check your connection and reload.

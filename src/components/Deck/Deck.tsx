@@ -11,7 +11,7 @@ const VIEWER_CONFIG = {
   features: '{"showroomPro":true}',
 };
 
-export const ThreeDBase = () => {
+export const Deck = () => {
   const {
     deckRef,
     active,
@@ -48,14 +48,14 @@ export const ThreeDBase = () => {
       <div className="vehicle-stage" aria-label="3D vehicle">
         <avp-3dws-deck
           ref={deckRef}
-          config-id={VIEWER_CONFIG.configId}
-          market={VIEWER_CONFIG.market}
-          streaming-stage={VIEWER_CONFIG.streamingStage}
-          camera={VIEWER_CONFIG.initialCamera}
-          multisession-disconnect={VIEWER_CONFIG.multisessionDisconnect}
-          features={VIEWER_CONFIG.features}
           active={active}
           pr-string={selectedVehicle.prString}
+          multisession-disconnect={VIEWER_CONFIG.multisessionDisconnect}
+          streaming-stage={VIEWER_CONFIG.streamingStage}
+          camera={VIEWER_CONFIG.initialCamera}
+          features={VIEWER_CONFIG.features}
+          config-id={VIEWER_CONFIG.configId}
+          market={VIEWER_CONFIG.market}
         ></avp-3dws-deck>
       </div>
     </div>

@@ -16,10 +16,10 @@ an active stream. Use **Stop stream** to disconnect.
 
 ## Code
 
-- `src/components/ThreeDBase/presets.ts` contains the preset IDs, labels, and PR strings.
-- `src/components/ThreeDBase/ThreeDBase.tsx` connects the hook to the UI and keeps viewer settings in `VIEWER_CONFIG`.
-- `src/components/ThreeDBase/DeckControls.tsx` renders vehicle selection, stream status, and event history.
-- `src/components/ThreeDBase/deckTypes.ts` defines the shared types and custom-element attributes.
+- `src/data/presets.ts` contains the preset IDs, labels, and PR strings.
+- `src/components/Deck/Deck.tsx` connects the hook to the UI and keeps viewer settings in `VIEWER_CONFIG`.
+- `src/components/Deck/DeckControls.tsx` renders vehicle selection, stream status, and event history.
+- `src/components/Deck/deckTypes.ts` defines the shared types and custom-element attributes.
 - `src/hooks/useDeck.ts` manages state, UI actions, and Deck event subscriptions.
 - `src/hooks/useDeckScript.ts` loads the SDK once and waits for custom-element registration.
 - `src/App.tsx` shows the viewer, a loading message, or a script-loading error.

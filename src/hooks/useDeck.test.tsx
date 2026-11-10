@@ -8,13 +8,13 @@ import {
   screen,
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ThreeDBase } from "../components/ThreeDBase/ThreeDBase";
+import { Deck } from "../components/Deck/Deck";
 import { VEHICLE_PRESETS } from "../data/presets";
 
 afterEach(cleanup);
 
 function renderViewer() {
-  const view = render(<ThreeDBase />);
+  const view = render(<Deck />);
   const deck = view.container.querySelector("avp-3dws-deck");
   if (!deck) throw new Error("Viewer did not render the Deck element.");
   return { ...view, deck };
