@@ -19,6 +19,8 @@ function ParsedVehicleDeck({
   const { deckRef, ...stream } = useDeck([vehicle]);
 
   console.log(vehicle.prString);
+
+  // 36687,DA13BX,2027,0R0R,BD,BZ2,PG4,PU2,P18,RDA,YOS
   return (
     <div className="vehicle-workspace">
       <ApiResponseControls vehicle={vehicle} stream={stream} />
@@ -26,16 +28,14 @@ function ParsedVehicleDeck({
         <avp-3dws-deck
           ref={deckRef}
           active={stream.active}
+          // pr-string="36687,DA13BX,2027,0R0R,BD,BZ2,PG4,PU2,P18,RDA,YOS"
           pr-string={vehicle.prString}
           multisession-disconnect={VIEWER_CONFIG.multisessionDisconnect}
-          streaming-stage={
-            import.meta.env.VITE_VW_AVP_STREAMING_STAGE ||
-            VIEWER_CONFIG.streamingStage
-          }
+          streaming-stage={VIEWER_CONFIG.streamingStage}
           camera-flight={VIEWER_CONFIG.cameraFlight}
           camera={VIEWER_CONFIG.initialCamera}
           features={VIEWER_CONFIG.features}
-          config-id={import.meta.env.VITE_VW_AVP_CONFIG_ID || "vw-test"}
+          config-id={VIEWER_CONFIG.configId}
           market="GBR"
         ></avp-3dws-deck>
         {!stream.active && image && (

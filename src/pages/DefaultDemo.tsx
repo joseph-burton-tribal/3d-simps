@@ -1,4 +1,4 @@
-import Deck from "../components/Deck/";
+import { Deck } from "../components/Deck/Deck";
 import { useDeckScript } from "../hooks/useDeckScript";
 
 export default function DefaultDemo() {
