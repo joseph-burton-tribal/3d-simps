@@ -1,5 +1,5 @@
 // Subset of the configurator API response needed to build an AVP PR string.
-// Output format matches the presets: modelId,salesType,year,exterior,interior,option...
+// Output format matches the presets: modelId, salesType, year, exterior, interior, options
 export interface VehicleApiResponse {
   configuration: {
     exterior: string;
