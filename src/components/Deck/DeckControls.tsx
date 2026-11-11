@@ -54,7 +54,7 @@ interface StreamControlsProps {
   onStop: () => void;
 }
 
-function StreamControls({
+export function StreamControls({
   active,
   status,
   hasCapacity,
@@ -100,7 +100,7 @@ interface EventHistoryProps {
   onClear: () => void;
 }
 
-function EventHistory({ events, onClear }: EventHistoryProps) {
+export function EventHistory({ events, onClear }: EventHistoryProps) {
   return (
     <section className="event-controls" aria-label="Event history">
       <div className="event-heading">

@@ -1,24 +1,22 @@
 import "./App.css";
 
-import Deck from "./components/Deck/";
-import { useDeckScript } from "./hooks/useDeckScript";
+import { Navigate, NavLink, Route, Routes } from "react-router-dom";
+import DefaultDemo from "./pages/DefaultDemo";
+import ParseApiResponse from "./pages/ParseApiResponse";
 
 function App() {
-  const scriptStatus = useDeckScript();
-
   return (
     <>
-      <section id="center">
-        {scriptStatus === "ready" ? (
-          <Deck />
-        ) : scriptStatus === "error" ? (
-          <p role="alert">
-            Unable to load the AVP viewer. Check your connection and reload.
-          </p>
-        ) : (
-          <p role="status">Loading viewer...</p>
-        )}
-      </section>
+      <nav className="app-navigation" aria-label="Main navigation">
+        <NavLink to="/default-demo">Default demo</NavLink>
+        <NavLink to="/parse-api-response">Parse API response</NavLink>
+      </nav>
+      <Routes>
+        <Route path="/" element={<Navigate to="/default-demo" replace />} />
+        <Route path="/default-demo" element={<DefaultDemo />} />
+        <Route path="/parse-api-response" element={<ParseApiResponse />} />
+        <Route path="*" element={<Navigate to="/default-demo" replace />} />
+      </Routes>
     </>
   );
 }

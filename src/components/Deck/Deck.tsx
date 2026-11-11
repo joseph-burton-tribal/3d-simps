@@ -1,23 +1,7 @@
 import { DeckControls } from "./DeckControls";
 import { useDeck } from "../../hooks/useDeck";
+import { VIEWER_CONFIG } from "./viewerConfig";
 import "./deckTypes";
-
-const VIEWER_CONFIG = {
-  configId: "audi-test",
-  market: "DEU",
-  streamingStage: "prelive-euw1",
-  initialCamera: "MRV1",
-  multisessionDisconnect: true,
-  cameraFlight: "disabled" as const,
-  features: JSON.stringify({
-    cameraNavigation: true,
-    environments: true,
-    zoom: true,
-    fullscreen: true,
-    showroomPro: true,
-    interior: true,
-  }),
-};
 
 export const Deck = () => {
   const {

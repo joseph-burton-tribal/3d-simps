@@ -98,6 +98,43 @@ unchanged, including custom tokens such as `LC_PR_AEEXC034`.
   stream performance, culling/quality options, and loading customization.
 - OPB integration, tracking, and production error-handling requirements remain TBC.
 
+## API Response Viewer
+
+Open `/parse-api-response` to load `src/data/pr-string-source.json`. The separate
+`ApiResponseDeck` and `ApiResponseControls` components show this vehicle, its
+generated PR string, stream controls, and events without using the Audi presets.
+The API's exterior image is a preview while the stream is inactive, not a live 3D render.
+
+`src/utils/prString.ts` exports `createPrString`, `getVisiblePrCodes`, and
+`normalizePrCode`. The conversion follows the existing preset format:
+
+```text
+modelId,salesType,year,exterior,interior,visibleOptionCodes...
+30251,D314BZ,2027,1C1C,WG,0TD,...
+```
+
+The sales type is the first segment of `derivativeId`. Colour values come from
+`configuration.exterior` and `configuration.interior`, with their F14/F56 family
+prefixes removed. Only `specItems` explicitly marked `visible: true` contribute
+options; M/G-prefixed family codes become their final three-character PR value.
+Duplicates and colour spec items are excluded. Hidden specs, replacement specs,
+and derivative package suffixes are not appended. The selected extras should be
+represented in the service's visible `specItems`; the supplied empty `extras`
+array does not establish a separate extras payload contract.
+
+The parsed viewer uses market `GBR`. Set `VITE_VW_AVP_CONFIG_ID` and optionally
+`VITE_VW_AVP_STREAMING_STAGE` in your Vite environment, then restart Vite, to use
+your VW-enabled AVP configuration. Without these values it retains the existing
+`vw-test` / `prelive-euw1` demo defaults. Those defaults are not confirmed to
+support this T-Cross or model year 2027: live rendering and the API-to-AVP code
+mapping still require verification against the VW service configuration. No
+Volkswagen configuration ID or credentials are provided by this fixture.
+
+To integrate a service response, pass its parsed JSON to
+`<ApiResponseDeck response={response} />` after the SDK is ready. A changed PR
+string stops the previous stream and mounts the new vehicle idle. Parsing errors
+are displayed without mounting a Deck.
+
 ## Checks
 
 ```sh
