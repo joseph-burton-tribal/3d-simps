@@ -130,6 +130,8 @@ export function useDeck() {
     DECK_EVENTS.forEach((type) => deck.addEventListener(type, listener));
     return () => {
       DECK_EVENTS.forEach((type) => deck.removeEventListener(type, listener));
+      // In a single-page app the SDK keeps streaming after unmount unless told to stop.
+      deck.removeAttribute("active");
     };
   }, []);
 

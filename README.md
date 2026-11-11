@@ -63,6 +63,23 @@ feature also depends on its separate API and authentication service.
 Configurator URLs are no longer accepted or parsed. PR strings are passed to AVP
 unchanged, including custom tokens such as `LC_PR_AEEXC034`.
 
+## Solution Design Reference
+
+Applied from the AVP 3dWS Solution Design (11-11-26) and the AVP Deck docs:
+
+- **Features:** `FEATURES` in `Deck.tsx` enables camera navigation, environments, zoom, full screen, interior and Showroom Pro. Rotate is on by default. Showroom Pro is for the Showroom app, not the brochure.
+- **Market:** `market` is an ISO alpha-3 code (`GBR`) so AVP can report analytics per market.
+- **Loading:** the Deck shows its own loader, so the app only overlays failures (`exception` event) on the stage. The document lists `readiness` for loading too, but the app shows it as capacity instead.
+- **Stopping streams:** in a single-page app the SDK keeps streaming after unmount, so `useDeck` removes `active` on cleanup.
+
+Not done yet:
+
+- **PR string from the configurator API.** The document says to build it from the second `dataReferences` entry (`/api/configurator/2.3/configuration/...`), dropping items with `"visible": false`. That needs a sample response, which I haven't seen. A string guessed from the derivative ID is not validated.
+- **Cost.** The document asks whether a stream in a hidden tab should stop. That is a decision, so nothing is implemented.
+- **Responsive and mobile.** The Deck sizes its UI with `--deck-fontsize-min`, `--deck-fontsize-preferred` and `--deck-fontsize-max`. If it covers half the page width, halve the `vw` part of the preferred value. The document also mentions a `--deck-loading-screen` variable, which I haven't verified.
+- **Production.** The test configs (`audi-test`, `vw-test`, `lamborghini-test`) are not for production, so a real project needs its own config ID. Allow-list `*.avp.tech` and the `*.kinesisvideo.<region>.amazonaws.com` domains listed in the Deck docs.
+- **Error handling, tracking, brochure.** All marked TBC in the document.
+
 ## Checks
 
 ```sh

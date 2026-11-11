@@ -161,4 +161,51 @@ describe("Deck controls and events", () => {
       "update:camera-flight",
     ]);
   });
+
+  it("stops a running stream when the viewer unmounts", () => {
+    const { deck, unmount } = renderViewer();
+
+    clickButton("Start stream");
+    expect(deck.hasAttribute("active")).toBe(true);
+
+    unmount();
+    expect(deck.hasAttribute("active")).toBe(false);
+  });
+
+  it("leaves loading to the Deck's own loader", () => {
+    const { container, deck } = renderViewer();
+
+    clickButton("Start stream");
+    emitDeckEvent(deck, "connected", {});
+    expect(container.querySelector(".stream-overlay")).toBeNull();
+  });
+
+  it("shows the failure on the stage as well as in the sidebar", () => {
+    const { container, deck } = renderViewer();
+
+    clickButton("Start stream");
+    emitDeckEvent(deck, "exception", {
+      reason: "NO_INSTANCES_AVAILABLE",
+      message: "No streaming instances are currently available.",
+    });
+
+    expect(container.querySelector(".stream-overlay")?.textContent).toContain(
+      "NO_INSTANCES_AVAILABLE",
+    );
+  });
+
+  it("configures the Solution Design features and market", () => {
+    const { deck } = renderViewer();
+
+    expect(JSON.parse(deck.getAttribute("features") ?? "{}")).toEqual({
+      cameraNavigation: true,
+      environments: true,
+      zoom: true,
+      fullscreen: true,
+      interior: true,
+      showroomPro: true,
+      cameraFlight: false,
+    });
+    expect(deck.getAttribute("market")).toBe("GBR");
+  });
 });
