@@ -1,4 +1,10 @@
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { VEHICLE_PRESETS } from "../data/presets";
 import type { EventEntry, StreamStatus } from "../components/Deck/deckTypes";
 
@@ -55,6 +61,15 @@ export function useDeck() {
   const [events, setEvents] = useState<EventEntry[]>([]);
   const nextEventId = useRef(0);
 
+  // Ensure the deck is inactive when the component unmounts.
+  useLayoutEffect(() => {
+    const deck = deckRef.current as (HTMLElement & { active?: boolean }) | null;
+    return () => {
+      if (deck) deck.active = false;
+    };
+  }, []);
+
+  // Record deck events for debugging and UI updates.
   const recordEvent = (
     source: EventEntry["source"],
     type: string,
@@ -70,6 +85,7 @@ export function useDeck() {
     setEvents((previous) => [entry, ...previous].slice(0, MAX_EVENTS));
   };
 
+  // Mark the deck as disconnected and reset relevant state.
   const markDisconnected = () => {
     setActive(false);
     setCurrentCamera("");
@@ -126,6 +142,7 @@ export function useDeck() {
     const deck = deckRef.current;
     if (!deck) return;
 
+    // Bind deck event listeners to handleDeckEvent
     const listener = (event: Event) => handleDeckEvent(event);
     DECK_EVENTS.forEach((type) => deck.addEventListener(type, listener));
     return () => {

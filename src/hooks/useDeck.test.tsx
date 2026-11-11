@@ -44,6 +44,29 @@ describe("Deck controls and events", () => {
     ).toBe(true);
   });
 
+  it("enables the showroom feature baseline", () => {
+    const { deck } = renderViewer();
+
+    expect(deck.getAttribute("camera-flight")).toBe("disabled");
+    expect(JSON.parse(deck.getAttribute("features") ?? "{}")).toEqual({
+      cameraNavigation: true,
+      environments: true,
+      zoom: true,
+      fullscreen: true,
+      showroomPro: true,
+      interior: true,
+    });
+  });
+
+  it("stops the stream when the viewer unmounts", () => {
+    const { deck, unmount } = renderViewer();
+
+    clickButton("Start stream");
+    unmount();
+
+    expect((deck as HTMLElement & { active?: boolean }).active).toBe(false);
+  });
+
   it("passes each preset string unchanged to the Deck and resets to the first", () => {
     const { deck } = renderViewer();
 

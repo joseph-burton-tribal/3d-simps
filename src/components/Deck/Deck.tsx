@@ -8,7 +8,15 @@ const VIEWER_CONFIG = {
   streamingStage: "prelive-euw1",
   initialCamera: "MRV1",
   multisessionDisconnect: true,
-  features: '{"showroomPro":true}',
+  cameraFlight: "disabled" as const,
+  features: JSON.stringify({
+    cameraNavigation: true,
+    environments: true,
+    zoom: true,
+    fullscreen: true,
+    showroomPro: true,
+    interior: true,
+  }),
 };
 
 export const Deck = () => {
@@ -52,6 +60,7 @@ export const Deck = () => {
           pr-string={selectedVehicle.prString}
           multisession-disconnect={VIEWER_CONFIG.multisessionDisconnect}
           streaming-stage={VIEWER_CONFIG.streamingStage}
+          camera-flight={VIEWER_CONFIG.cameraFlight}
           camera={VIEWER_CONFIG.initialCamera}
           features={VIEWER_CONFIG.features}
           config-id={VIEWER_CONFIG.configId}
