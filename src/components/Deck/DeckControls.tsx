@@ -1,5 +1,5 @@
 import { VEHICLE_PRESETS } from "../../data/presets";
-import type { EventEntry, StreamStatus } from "./deckTypes";
+import type { EventEntry, StreamStatus } from "../../types/deck";
 
 const STATUS_LABELS: Record<StreamStatus, string> = {
   idle: "Idle",

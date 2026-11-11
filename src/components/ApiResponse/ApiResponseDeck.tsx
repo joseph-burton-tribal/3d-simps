@@ -1,9 +1,12 @@
 import type { VehiclePreset } from "../../data/presets";
 import { useDeck } from "../../hooks/useDeck";
-import { createPrString, type VehicleApiResponse } from "../../utils/prString";
-import { VIEWER_CONFIG } from "../Deck/viewerConfig";
+import {
+  createPrString,
+  type VehicleApiResponse,
+} from "../../utils/create-pr-string";
+import { API_VIEWER_CONFIG as VIEWER_CONFIG } from "../../config/viewer";
 import { ApiResponseControls } from "./ApiResponseControls";
-import "../Deck/deckTypes";
+import "../../types/deck";
 
 type ApiResponse = VehicleApiResponse & {
   images?: { rel: string; uri: string }[];
@@ -18,9 +21,6 @@ function ParsedVehicleDeck({
 }) {
   const { deckRef, ...stream } = useDeck([vehicle]);
 
-  console.log(vehicle.prString);
-
-  // 36687,DA13BX,2027,0R0R,BD,BZ2,PG4,PU2,P18,RDA,YOS
   return (
     <div className="vehicle-workspace">
       <ApiResponseControls vehicle={vehicle} stream={stream} />
@@ -28,7 +28,6 @@ function ParsedVehicleDeck({
         <avp-3dws-deck
           ref={deckRef}
           active={stream.active}
-          // pr-string="36687,DA13BX,2027,0R0R,BD,BZ2,PG4,PU2,P18,RDA,YOS"
           pr-string={vehicle.prString}
           multisession-disconnect={VIEWER_CONFIG.multisessionDisconnect}
           streaming-stage={VIEWER_CONFIG.streamingStage}
@@ -36,7 +35,7 @@ function ParsedVehicleDeck({
           camera={VIEWER_CONFIG.initialCamera}
           features={VIEWER_CONFIG.features}
           config-id={VIEWER_CONFIG.configId}
-          market="GBR"
+          market={VIEWER_CONFIG.market}
         ></avp-3dws-deck>
         {!stream.active && image && (
           <img

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import source from "../data/pr-string-source.json";
-import { createPrString, getVisiblePrCodes, normalizePrCode } from "./prString";
+import source from "../data/api-response-source.json";
+import {
+  createPrString,
+  getVisiblePrCodes,
+  normalizePrCode,
+} from "./create-pr-string";
 
 describe("API response PR strings", () => {
   it("builds the fixture's vehicle identity and selected colours", () => {

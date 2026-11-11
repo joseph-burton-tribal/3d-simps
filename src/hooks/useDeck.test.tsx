@@ -11,8 +11,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Deck } from "../components/Deck/Deck";
 import { VEHICLE_PRESETS } from "../data/presets";
 import { ApiResponseDeck } from "../components/ApiResponse/ApiResponseDeck";
-import source from "../data/pr-string-source.json";
-import { createPrString } from "../utils/prString";
+import { API_VIEWER_CONFIG } from "../config/viewer";
+import source from "../data/api-response-source.json";
+import { createPrString } from "../utils/create-pr-string";
 
 afterEach(cleanup);
 
@@ -25,8 +26,11 @@ describe("API response viewer", () => {
     if (!deck) throw new Error("API viewer did not render.");
 
     expect(deck.getAttribute("pr-string")).toBe(createPrString(source));
-    expect(deck.getAttribute("market")).toBe("GBR");
-    expect(deck.getAttribute("config-id")).toBe("vw-test");
+    expect(deck.getAttribute("market")).toBe(API_VIEWER_CONFIG.market);
+    expect(deck.getAttribute("config-id")).toBe(API_VIEWER_CONFIG.configId);
+    expect(deck.getAttribute("streaming-stage")).toBe(
+      API_VIEWER_CONFIG.streamingStage,
+    );
     expect(screen.queryByRole("combobox")).toBeNull();
     expect(screen.getByRole("img").getAttribute("src")).toBe(
       source.images[0].uri,

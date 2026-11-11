@@ -1,5 +1,5 @@
 import { ApiResponseDeck } from "../components/ApiResponse/ApiResponseDeck";
-import source from "../data/pr-string-source.json";
+import source from "../data/api-response-source.json";
 import { useDeckScript } from "../hooks/useDeckScript";
 
 export default function ParseApiResponse() {

@@ -19,7 +19,8 @@ an active stream. Use **Stop stream** to disconnect.
 - `src/data/presets.ts` contains the preset IDs, labels, and PR strings.
 - `src/components/Deck/Deck.tsx` connects the hook to the UI and keeps viewer settings in `VIEWER_CONFIG`.
 - `src/components/Deck/DeckControls.tsx` renders vehicle selection, stream status, and event history.
-- `src/components/Deck/deckTypes.ts` defines the shared types and custom-element attributes.
+- `src/types/deck.ts` defines the shared types and custom-element attributes.
+- `src/config/viewer.ts` holds the per-route AVP viewer settings (`DEMO_VIEWER_CONFIG`, `API_VIEWER_CONFIG`).
 - `src/hooks/useDeck.ts` manages state, UI actions, and Deck event subscriptions.
 - `src/hooks/useDeckScript.ts` loads the SDK once and waits for custom-element registration.
 - `src/App.tsx` shows the viewer, a loading message, or a script-loading error.

@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 import { VEHICLE_PRESETS, type VehiclePreset } from "../data/presets";
-import type { EventEntry, StreamStatus } from "../components/Deck/deckTypes";
+import type { EventEntry, StreamStatus } from "../types/deck";
 
 const MAX_EVENTS = 20;
 

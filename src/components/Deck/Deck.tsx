@@ -1,7 +1,7 @@
 import { DeckControls } from "./DeckControls";
 import { useDeck } from "../../hooks/useDeck";
-import { VIEWER_CONFIG } from "./viewerConfig";
-import "./deckTypes";
+import { DEMO_VIEWER_CONFIG as VIEWER_CONFIG } from "../../config/viewer";
+import "../../types/deck";
 
 export const Deck = () => {
   const {
