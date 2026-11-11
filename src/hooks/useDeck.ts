@@ -1,4 +1,10 @@
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { VEHICLE_PRESETS } from "../data/presets";
 import type { EventEntry, StreamStatus } from "../components/Deck/deckTypes";
 
@@ -45,7 +51,6 @@ function getErrorMessage(
 
 export function useDeck() {
   const deckRef = useRef<HTMLElement | null>(null);
-  // active requests a stream; status tracks the Deck's connection lifecycle.
   const [active, setActive] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(VEHICLE_PRESETS[0]);
   const [streamError, setStreamError] = useState("");
@@ -55,6 +60,15 @@ export function useDeck() {
   const [events, setEvents] = useState<EventEntry[]>([]);
   const nextEventId = useRef(0);
 
+  // Ensure the deck is inactive when the component unmounts.
+  useLayoutEffect(() => {
+    const deck = deckRef.current as (HTMLElement & { active?: boolean }) | null;
+    return () => {
+      if (deck) deck.active = false;
+    };
+  }, []);
+
+  // Record deck events for debugging and UI updates.
   const recordEvent = (
     source: EventEntry["source"],
     type: string,
@@ -70,13 +84,14 @@ export function useDeck() {
     setEvents((previous) => [entry, ...previous].slice(0, MAX_EVENTS));
   };
 
+  // Mark the deck as disconnected and reset relevant state.
   const markDisconnected = () => {
     setActive(false);
     setCurrentCamera("");
     setStatus((previous) => (previous === "error" ? previous : "disconnected"));
   };
 
-  // Deck events are native CustomEvents; their payload is in event.detail.
+  // Deck events are native CustomEvents, their payload is in event.detail.
   const handleDeckEvent = useEffectEvent((event: Event) => {
     const payload = (event as CustomEvent<unknown>).detail;
 
@@ -126,6 +141,7 @@ export function useDeck() {
     const deck = deckRef.current;
     if (!deck) return;
 
+    // Bind deck event listeners to handleDeckEvent
     const listener = (event: Event) => handleDeckEvent(event);
     DECK_EVENTS.forEach((type) => deck.addEventListener(type, listener));
     return () => {

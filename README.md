@@ -55,14 +55,34 @@ Deck events; expand an entry to inspect its payload.
 
 The viewer uses the `audi-test` demo configuration and its `prelive-euw1` stage.
 It explicitly requests the listed `MRV1` camera instead of the demo configuration's
-invalid initial camera. Other camera behavior follows the demo defaults. These are demo
-settings, not a production configuration. Streaming still depends on AVP access,
+invalid initial camera, and disables camera flight by default. These are demo settings,
+not a production configuration. Streaming still depends on AVP access,
 network connectivity, and available rendering capacity. The enabled Showroom Pro
 feature also depends on its separate API and authentication service.
+
+`Deck.tsx` provides `market="DEU"` for AVP market analytics and applies a partial
+runtime feature override: camera navigation, environments, zoom, fullscreen,
+Showroom Pro, and interior are enabled. AVP merges this partial override with the
+server-side `config-id` configuration. The requested rotate behavior has no separate
+feature flag in the published Deck feature list, so this demo leaves AVP's default
+rotation behavior unchanged. Showroom Pro option data, authentication, and any
+option-specific camera mappings still need to come from the integrating app.
+
+The SDK is loaded once by `useDeckScript`, which waits for the custom element to be
+registered before rendering it. The hook listens for readiness, connection,
+initialization, disconnect, update, and fatal error events. Its status UI distinguishes
+capacity (`readiness`) from a live stream (`connected` / `streamInitialized`). On
+unmount, the demo sets the Deck's `active` property to `false` so an SPA route change
+does not leave a stream running and consuming resources. The built-in AVP loading UI
+is retained; a custom overlay can be added using those lifecycle events. AVP also
+supports responsive font-size CSS variables and a `layout` override; assess those
+against the host layout before forcing values. Production hosts must allow-list the
+AVP and regional Kinesis Video domains listed in the [AVP network requirements](https://avp-3dws-deck.eu-west-1-web-streaming.avp.tech/docs/index.html).
 
 Configurator URLs are no longer accepted or parsed. PR strings are passed to AVP
 unchanged, including custom tokens such as `LC_PR_AEEXC034`.
 
+<<<<<<< HEAD
 ## Solution Design Reference
 
 Applied from the AVP 3dWS Solution Design (11-11-26) and the AVP Deck docs:
@@ -79,6 +99,23 @@ Not done yet:
 - **Responsive and mobile.** The Deck sizes its UI with `--deck-fontsize-min`, `--deck-fontsize-preferred` and `--deck-fontsize-max`. If it covers half the page width, halve the `vw` part of the preferred value. The document also mentions a `--deck-loading-screen` variable, which I haven't verified.
 - **Production.** The test configs (`audi-test`, `vw-test`, `lamborghini-test`) are not for production, so a real project needs its own config ID. Allow-list `*.avp.tech` and the `*.kinesisvideo.<region>.amazonaws.com` domains listed in the Deck docs.
 - **Error handling, tracking, brochure.** All marked TBC in the document.
+=======
+## Future Integration Spikes
+
+- For new vehicles, the MSC configuration response includes `dataReferences`; its
+  second entry points to the configurator response used to build the PR string.
+  Convert the API's configuration/options into the AVP format and omit options marked
+  `visible: false`. Stock-by-VIN and OPB are not configurable in this design.
+- The carousel should open the full-screen viewer through a CTA. When configuration
+  changes, request and persist a new MSC, validate that the configuration is buildable,
+  then pass its generated PR string to AVP. This POC's presets demonstrate only the
+  final PR-string handoff; they do not call the VW configuration APIs.
+- Confirm Showroom Pro's API/auth flow and update behavior against real selectable
+  options. Verify selected parts against the returned configuration, define stream
+  outage/fallback behavior, and test mobile sizing, hidden-tab stream shutdown,
+  stream performance, culling/quality options, and loading customization.
+- OPB integration, tracking, and production error-handling requirements remain TBC.
+>>>>>>> align-with-solution-design
 
 ## Checks
 
