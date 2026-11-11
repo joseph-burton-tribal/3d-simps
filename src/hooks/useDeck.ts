@@ -51,7 +51,6 @@ function getErrorMessage(
 
 export function useDeck() {
   const deckRef = useRef<HTMLElement | null>(null);
-  // active requests a stream; status tracks the Deck's connection lifecycle.
   const [active, setActive] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(VEHICLE_PRESETS[0]);
   const [streamError, setStreamError] = useState("");
@@ -92,7 +91,7 @@ export function useDeck() {
     setStatus((previous) => (previous === "error" ? previous : "disconnected"));
   };
 
-  // Deck events are native CustomEvents; their payload is in event.detail.
+  // Deck events are native CustomEvents, their payload is in event.detail.
   const handleDeckEvent = useEffectEvent((event: Event) => {
     const payload = (event as CustomEvent<unknown>).detail;
 
