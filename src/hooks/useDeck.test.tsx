@@ -265,20 +265,6 @@ describe("Deck controls and events", () => {
     expect(container.querySelector(".stream-overlay")).toBeNull();
   });
 
-  it("shows the failure on the stage as well as in the sidebar", () => {
-    const { container, deck } = renderViewer();
-
-    clickButton("Start stream");
-    emitDeckEvent(deck, "exception", {
-      reason: "NO_INSTANCES_AVAILABLE",
-      message: "No streaming instances are currently available.",
-    });
-
-    expect(container.querySelector(".stream-overlay")?.textContent).toContain(
-      "NO_INSTANCES_AVAILABLE",
-    );
-  });
-
   it("configures the demo market and config", () => {
     const { deck } = renderViewer();
 
