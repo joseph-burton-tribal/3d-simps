@@ -69,6 +69,29 @@
   text-align: left;
 }
 
+.app-navigation {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+}
+
+.app-navigation a {
+  padding: 6px 8px;
+  border-bottom: 2px solid transparent;
+  color: #52605b;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.app-navigation a[aria-current="page"] {
+  border-bottom-color: #21694d;
+  color: #202a26;
+  font-weight: 600;
+}
+
 .vehicle-workspace {
   --text: #52605b;
   --text-h: #202a26;
@@ -78,7 +101,7 @@
   box-sizing: border-box;
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
-  height: calc(100svh - 32px);
+  height: calc(100svh - 72px);
   min-height: 400px;
   color: var(--text);
   background: var(--bg);
@@ -136,6 +159,26 @@
   width: 100%;
   height: 100%;
   isolation: isolate; /* keep the Deck's own z-index layers below the overlay */
+}
+
+.api-vehicle-stage {
+  position: relative;
+}
+
+.api-vehicle-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #e5e7e6;
+  pointer-events: none;
+}
+
+.api-pr-string pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: 11px/1.5 var(--mono);
 }
 
 .configuration-actions {
@@ -276,7 +319,7 @@
 
   .vehicle-workspace {
     height: auto;
-    min-height: calc(100svh - 16px);
+    min-height: calc(100svh - 56px);
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(360px, 60svh);
   }

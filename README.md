@@ -19,7 +19,8 @@ an active stream. Use **Stop stream** to disconnect.
 - `src/data/presets.ts` contains the preset IDs, labels, and PR strings.
 - `src/components/Deck/Deck.tsx` connects the hook to the UI and keeps viewer settings in `VIEWER_CONFIG`.
 - `src/components/Deck/DeckControls.tsx` renders vehicle selection, stream status, and event history.
-- `src/components/Deck/deckTypes.ts` defines the shared types and custom-element attributes.
+- `src/types/deck.ts` defines the shared types and custom-element attributes.
+- `src/config/viewer.ts` holds the per-route AVP viewer settings (`DEMO_VIEWER_CONFIG`, `API_VIEWER_CONFIG`).
 - `src/hooks/useDeck.ts` manages state, UI actions, and Deck event subscriptions.
 - `src/hooks/useDeckScript.ts` loads the SDK once and waits for custom-element registration.
 - `src/App.tsx` shows the viewer, a loading message, or a script-loading error.
@@ -116,6 +117,43 @@ Not done yet:
   stream performance, culling/quality options, and loading customization.
 - OPB integration, tracking, and production error-handling requirements remain TBC.
 >>>>>>> align-with-solution-design
+
+## API Response Viewer
+
+Open `/parse-api-response` to load `src/data/pr-string-source.json`. The separate
+`ApiResponseDeck` and `ApiResponseControls` components show this vehicle, its
+generated PR string, stream controls, and events without using the Audi presets.
+The API's exterior image is a preview while the stream is inactive, not a live 3D render.
+
+`src/utils/prString.ts` exports `createPrString`, `getVisiblePrCodes`, and
+`normalizePrCode`. The conversion follows the existing preset format:
+
+```text
+modelId,salesType,year,exterior,interior,visibleOptionCodes...
+30251,D314BZ,2027,1C1C,WG,0TD,...
+```
+
+The sales type is the first segment of `derivativeId`. Colour values come from
+`configuration.exterior` and `configuration.interior`, with their F14/F56 family
+prefixes removed. Only `specItems` explicitly marked `visible: true` contribute
+options; M/G-prefixed family codes become their final three-character PR value.
+Duplicates and colour spec items are excluded. Hidden specs, replacement specs,
+and derivative package suffixes are not appended. The selected extras should be
+represented in the service's visible `specItems`; the supplied empty `extras`
+array does not establish a separate extras payload contract.
+
+The parsed viewer uses market `GBR`. Set `VITE_VW_AVP_CONFIG_ID` and optionally
+`VITE_VW_AVP_STREAMING_STAGE` in your Vite environment, then restart Vite, to use
+your VW-enabled AVP configuration. Without these values it retains the existing
+`vw-test` / `prelive-euw1` demo defaults. Those defaults are not confirmed to
+support this T-Cross or model year 2027: live rendering and the API-to-AVP code
+mapping still require verification against the VW service configuration. No
+Volkswagen configuration ID or credentials are provided by this fixture.
+
+To integrate a service response, pass its parsed JSON to
+`<ApiResponseDeck response={response} />` after the SDK is ready. A changed PR
+string stops the previous stream and mounts the new vehicle idle. Parsing errors
+are displayed without mounting a Deck.
 
 ## Checks
 

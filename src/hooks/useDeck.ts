@@ -5,8 +5,8 @@ import {
   useRef,
   useState,
 } from "react";
-import { VEHICLE_PRESETS } from "../data/presets";
-import type { EventEntry, StreamStatus } from "../components/Deck/deckTypes";
+import { VEHICLE_PRESETS, type VehiclePreset } from "../data/presets";
+import type { EventEntry, StreamStatus } from "../types/deck";
 
 const MAX_EVENTS = 20;
 
@@ -49,10 +49,10 @@ function getErrorMessage(
   return [code, message].filter(Boolean).join(": ") || fallback;
 }
 
-export function useDeck() {
+export function useDeck(vehicles: readonly VehiclePreset[] = VEHICLE_PRESETS) {
   const deckRef = useRef<HTMLElement | null>(null);
   const [active, setActive] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState(VEHICLE_PRESETS[0]);
+  const [selectedVehicle, setSelectedVehicle] = useState(vehicles[0]);
   const [streamError, setStreamError] = useState("");
   const [status, setStatus] = useState<StreamStatus>("idle");
   const [hasCapacity, setHasCapacity] = useState<boolean | null>(null);
@@ -152,7 +152,7 @@ export function useDeck() {
   }, []);
 
   const selectVehicle = (id: string) => {
-    const vehicle = VEHICLE_PRESETS.find((preset) => preset.id === id);
+    const vehicle = vehicles.find((preset) => preset.id === id);
     if (!vehicle) return;
 
     setSelectedVehicle(vehicle);
@@ -161,9 +161,9 @@ export function useDeck() {
   };
 
   const resetVehicle = () => {
-    setSelectedVehicle(VEHICLE_PRESETS[0]);
+    setSelectedVehicle(vehicles[0]);
     setStreamError("");
-    recordEvent("UI", "reset", { id: VEHICLE_PRESETS[0].id });
+    recordEvent("UI", "reset", { id: vehicles[0].id });
   };
 
   const startStream = () => {

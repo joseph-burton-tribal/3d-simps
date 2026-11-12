@@ -1,44 +1,7 @@
 import { DeckControls } from "./DeckControls";
 import { useDeck } from "../../hooks/useDeck";
-import type { StreamStatus } from "./deckTypes";
-import "./deckTypes";
-
-// Embed features from the Solution Design. Rotate is on by default.
-const FEATURES = {
-  cameraNavigation: true,
-  environments: true,
-  zoom: true,
-  fullscreen: true,
-  interior: true,
-  showroomPro: true, // Showroom app only, not the brochure
-  cameraFlight: false,
-};
-
-const VIEWER_CONFIG = {
-  configId: "audi-test",
-  market: "GBR", // ISO alpha-3; used for per-market analytics
-  streamingStage: "prelive-euw1",
-  initialCamera: "MRV1",
-  multisessionDisconnect: true,
-  features: JSON.stringify(FEATURES),
-};
-
-// The Deck shows its own loader, so only failures are overlaid.
-function StreamOverlay({
-  status,
-  error,
-}: {
-  status: StreamStatus;
-  error: string;
-}) {
-  if (status !== "error") return null;
-
-  return (
-    <div className="stream-overlay" aria-live="polite">
-      <p>Stream unavailable. {error}</p>
-    </div>
-  );
-}
+import { DEMO_VIEWER_CONFIG as VIEWER_CONFIG } from "../../config/viewer";
+import "../../types/deck";
 
 export const Deck = () => {
   const {
@@ -87,7 +50,6 @@ export const Deck = () => {
           config-id={VIEWER_CONFIG.configId}
           market={VIEWER_CONFIG.market}
         ></avp-3dws-deck>
-        <StreamOverlay status={status} error={streamError} />
       </div>
     </div>
   );

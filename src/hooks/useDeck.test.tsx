@@ -10,8 +10,70 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Deck } from "../components/Deck/Deck";
 import { VEHICLE_PRESETS } from "../data/presets";
+import { ApiResponseDeck } from "../components/ApiResponse/ApiResponseDeck";
+import { API_VIEWER_CONFIG, DEMO_VIEWER_CONFIG } from "../config/viewer";
+import source from "../data/api-response-source.json";
+import { createPrString } from "../utils/create-pr-string";
 
 afterEach(cleanup);
+
+describe("API response viewer", () => {
+  it("passes the derived PR string to AVP without showing Audi presets", () => {
+    const { container, unmount } = render(
+      <ApiResponseDeck response={source} />,
+    );
+    const deck = container.querySelector("avp-3dws-deck");
+    if (!deck) throw new Error("API viewer did not render.");
+
+    expect(deck.getAttribute("pr-string")).toBe(createPrString(source));
+    expect(deck.getAttribute("market")).toBe(API_VIEWER_CONFIG.market);
+    expect(deck.getAttribute("config-id")).toBe(API_VIEWER_CONFIG.configId);
+    expect(deck.getAttribute("streaming-stage")).toBe(
+      API_VIEWER_CONFIG.streamingStage,
+    );
+    expect(screen.queryByRole("combobox")).toBeNull();
+    expect(screen.getByRole("img").getAttribute("src")).toBe(
+      source.images[0].uri,
+    );
+    clickButton("Start stream");
+    expect(screen.getByRole("status").textContent).toBe("Starting");
+    expect(screen.queryByRole("img")).toBeNull();
+    emitDeckEvent(deck, "streamInitialized", {});
+    expect(screen.getByRole("status").textContent).toBe("Streaming");
+    unmount();
+    expect((deck as HTMLElement & { active?: boolean }).active).toBe(false);
+  });
+
+  it("disconnects the previous stream when a new API configuration arrives", () => {
+    const { container, rerender } = render(
+      <ApiResponseDeck response={source} />,
+    );
+    const previousDeck = container.querySelector("avp-3dws-deck");
+    clickButton("Start stream");
+    const response = {
+      ...source,
+      configuration: { ...source.configuration, exterior: "F14 2T2T" },
+    };
+    rerender(<ApiResponseDeck response={response} />);
+    expect((previousDeck as HTMLElement & { active?: boolean }).active).toBe(
+      false,
+    );
+    expect(
+      container.querySelector("avp-3dws-deck")?.getAttribute("pr-string"),
+    ).toBe(createPrString(response));
+    expect(screen.getByRole("status").textContent).toBe("Idle");
+  });
+
+  it("shows parsing failures instead of mounting a viewer with invalid input", () => {
+    const response = {
+      ...source,
+      derivative: { ...source.derivative, year: "" },
+    };
+    const { container } = render(<ApiResponseDeck response={response} />);
+    expect(screen.getByRole("alert").textContent).toContain("model year");
+    expect(container.querySelector("avp-3dws-deck")).toBeNull();
+  });
+});
 
 function renderViewer() {
   const view = render(<Deck />);
@@ -217,18 +279,13 @@ describe("Deck controls and events", () => {
     );
   });
 
-  it("configures the Solution Design features and market", () => {
+  it("configures the demo market and config", () => {
     const { deck } = renderViewer();
 
-    expect(JSON.parse(deck.getAttribute("features") ?? "{}")).toEqual({
-      cameraNavigation: true,
-      environments: true,
-      zoom: true,
-      fullscreen: true,
-      interior: true,
-      showroomPro: true,
-      cameraFlight: false,
-    });
-    expect(deck.getAttribute("market")).toBe("GBR");
+    expect(deck.getAttribute("market")).toBe(DEMO_VIEWER_CONFIG.market);
+    expect(deck.getAttribute("config-id")).toBe(DEMO_VIEWER_CONFIG.configId);
+    expect(deck.getAttribute("streaming-stage")).toBe(
+      DEMO_VIEWER_CONFIG.streamingStage,
+    );
   });
 });
