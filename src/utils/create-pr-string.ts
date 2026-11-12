@@ -50,18 +50,24 @@ export function getVisiblePrCodes(
 // Throws on malformed input so the caller can show an error instead of mounting a viewer.
 export function createPrString(response: VehicleApiResponse): string {
   const { configuration, derivative, specItems } = response;
+
   const model = derivative.modelId.trim();
+
   // derivativeId is "D314BZ-2027-MKSUKA1-..."; only the leading sales type is needed.
   const salesType = derivative.derivativeId.split("-")[0].trim();
+
   const year = derivative.year.trim();
+
   if (!/^[A-Za-z0-9]+$/.test(model) || !/^[A-Z0-9]{6}$/.test(salesType)) {
     throw new Error(
       "A model ID and six-character derivative sales type are required.",
     );
   }
+
   if (!/^\d{4}$/.test(year)) {
     throw new Error("A four-digit model year is required.");
   }
+
   if (
     !/^F14\s+[A-Z0-9]{4}$/.test(configuration.exterior.trim()) ||
     !/^F56\s+[A-Z0-9]{2}$/.test(configuration.interior.trim())
