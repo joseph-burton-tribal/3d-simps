@@ -1,6 +1,7 @@
 import type { VehiclePreset } from "../../data/presets";
 import type { useDeck } from "../../hooks/useDeck";
-import { EventHistory, StreamControls } from "../Deck/DeckControls";
+import { EventHistory } from "../EventHistory/EventHistory";
+import { StreamControls } from "../StreamControls/StreamControls";
 
 interface ApiResponseControlsProps {
   vehicle: VehiclePreset;
