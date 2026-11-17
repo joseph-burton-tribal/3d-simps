@@ -47,9 +47,11 @@ export function getFinishCode(
   family: "exterior" | "interior",
 ): string {
   const pattern = family === "exterior" ? EXTERIOR_FAMILY : INTERIOR_FAMILY;
+
   const fromSpec = response.specItems.find((item) =>
     pattern.test(item.pr.trim()),
   )?.pr;
+
   const raw = (fromSpec ?? response.configuration[family] ?? "").trim();
 
   if (!pattern.test(raw)) {
@@ -59,6 +61,7 @@ export function getFinishCode(
   }
 
   const code = normalizePrCode(raw);
+
   if (!/^[A-Z0-9]{2,4}$/.test(code)) {
     throw new Error(`Unsupported ${family} finish code: ${raw}`);
   }
@@ -79,14 +82,14 @@ export function getPrCodes(
   replacedStandardSpecs: string[] = [],
 ): string[] {
   const excluded = new Set(replacedStandardSpecs.map(normalizePrCode));
-  const seen = new Set<string>();
-  const codes: string[] = [];
+  // Keep insertion order and silently ignores repeats, so adding the
+  // same code twice leaves it in place the first time it was seen.
+  const codes = new Set<string>();
 
   const add = (value: string) => {
     const code = normalizePrCode(value);
-    if (code.startsWith("U") || excluded.has(code) || seen.has(code)) return;
-    seen.add(code);
-    codes.push(code);
+    if (code.startsWith("U") || excluded.has(code)) return;
+    codes.add(code);
   };
 
   for (const item of specItems) {
@@ -97,7 +100,7 @@ export function getPrCodes(
     }
   }
 
-  return codes;
+  return [...codes];
 }
 
 // Builds the comma-separated PR string for the avp-3dws-deck `pr-string` attribute
