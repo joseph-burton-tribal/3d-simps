@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { VehiclePreset } from "../../data/presets";
 import type { useDeck } from "../../hooks/useDeck";
 import { EventHistory } from "../EventHistory/EventHistory";
@@ -6,15 +7,18 @@ import { StreamControls } from "../StreamControls/StreamControls";
 interface ApiResponseControlsProps {
   vehicle: VehiclePreset;
   stream: Omit<ReturnType<typeof useDeck>, "deckRef">;
+  children?: ReactNode;
 }
 
 export function ApiResponseControls({
   vehicle,
   stream,
+  children,
 }: ApiResponseControlsProps) {
   return (
     <aside className="vehicle-controls" aria-label="API vehicle configuration">
       <h1>{vehicle.label}</h1>
+      {children}
       <details className="api-pr-string">
         <summary>PR string</summary>
         <pre>{vehicle.prString}</pre>

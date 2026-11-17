@@ -12,8 +12,14 @@ import { Deck } from "../components/Deck/Deck";
 import { VEHICLE_PRESETS } from "../data/presets";
 import { ApiResponseDeck } from "../components/ApiResponse/ApiResponseDeck";
 import { API_VIEWER_CONFIG } from "../config/viewer";
-import source from "../data/api-response-source.json";
-import { createPrString } from "../utils/create-pr-string";
+import ParseApiResponse from "../pages/ParseApiResponse";
+import { VW_PAYLOADS } from "../data/vw-payloads";
+import { createVwPrString } from "../utils/create-vw-pr-string";
+
+vi.mock("../hooks/useDeckScript", () => ({ useDeckScript: () => "ready" }));
+
+const source = VW_PAYLOADS[0].response;
+const stock = VW_PAYLOADS[1].response;
 
 afterEach(cleanup);
 
@@ -25,7 +31,7 @@ describe("API response viewer", () => {
     const deck = container.querySelector("avp-3dws-deck");
     if (!deck) throw new Error("API viewer did not render.");
 
-    expect(deck.getAttribute("pr-string")).toBe(createPrString(source));
+    expect(deck.getAttribute("pr-string")).toBe(createVwPrString(source));
     expect(deck.getAttribute("market")).toBe(API_VIEWER_CONFIG.market);
     expect(deck.getAttribute("config-id")).toBe(API_VIEWER_CONFIG.configId);
     expect(deck.getAttribute("streaming-stage")).toBe(
@@ -33,7 +39,7 @@ describe("API response viewer", () => {
     );
     expect(screen.queryByRole("combobox")).toBeNull();
     expect(screen.getByRole("img").getAttribute("src")).toBe(
-      source.images[0].uri,
+      source.images?.find((image) => image.rel === "exterior-front")?.uri,
     );
     clickButton("Start stream");
     expect(screen.getByRole("status").textContent).toBe("Starting");
@@ -52,7 +58,7 @@ describe("API response viewer", () => {
     clickButton("Start stream");
     const response = {
       ...source,
-      configuration: { ...source.configuration, exterior: "F14 2T2T" },
+      derivative: { ...source.derivative, year: "2028" },
     };
     rerender(<ApiResponseDeck response={response} />);
     expect((previousDeck as HTMLElement & { active?: boolean }).active).toBe(
@@ -60,7 +66,23 @@ describe("API response viewer", () => {
     );
     expect(
       container.querySelector("avp-3dws-deck")?.getAttribute("pr-string"),
-    ).toBe(createPrString(response));
+    ).toBe(createVwPrString(response));
+    expect(screen.getByRole("status").textContent).toBe("Idle");
+  });
+
+  it("switches between the Configured and Stock payloads on the page", () => {
+    const { container } = render(<ParseApiResponse />);
+    const prString = () =>
+      container.querySelector("avp-3dws-deck")?.getAttribute("pr-string");
+    expect(prString()).toBe(createVwPrString(source));
+
+    fireEvent.change(screen.getByLabelText("Payload"), {
+      target: { value: "stock" },
+    });
+    expect(prString()).toBe(createVwPrString(stock));
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
+      stock.derivative.title,
+    );
     expect(screen.getByRole("status").textContent).toBe("Idle");
   });
 

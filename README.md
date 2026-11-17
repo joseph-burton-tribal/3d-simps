@@ -2,7 +2,8 @@
 
 A React and TypeScript proof of concept using the AVP streaming web component
 (`<avp-3dws-deck>`). It has two routes: a demo driven by Audi PR-string presets,
-and a viewer that derives its PR string from a Volkswagen configurator API response.
+and a viewer that derives its PR string from Volkswagen configurator API responses
+("Configured" and "Stock" payloads).
 
 ## Run
 
@@ -18,9 +19,10 @@ Open the local URL printed by Vite. The nav bar switches between two pages;
   **Start stream**. Changing the selection sends the preset's exact PR string to the
   viewer immediately. **Reset** selects the first preset; it does not stop an active
   stream. Use **Stop stream** to disconnect.
-- **Parse API response** (`/parse-api-response`): shows the vehicle from
-  `src/data/api-response-source.json`, its generated PR string, stream controls, and
-  events. There is no preset selector.
+- **Parse API response** (`/parse-api-response`): choose the **Configured**
+  (`src/data/configured.json`) or **Stock** (`src/data/stock.json`) payload. The page
+  shows the vehicle title, its generated PR string, stream controls, and events.
+  Switching payload remounts the viewer idle with the new PR string.
 
 Each page loads the AVP SDK with `useDeckScript` and shows a loading message or a
 script-loading error until the custom element is registered.
@@ -39,6 +41,7 @@ src/
     Deck/DeckControls.tsx         Preset selector + StreamControls + EventHistory
     ApiResponse/ApiResponseDeck.tsx      Parses a response, then mounts the viewer
     ApiResponse/ApiResponseControls.tsx  PR string readout + StreamControls + EventHistory
+    ApiResponse/PayloadSelection.tsx     Configured / Stock payload <select>
     StreamControls/StreamControls.tsx    Status, capacity, camera, start/stop (shared)
     EventHistory/EventHistory.tsx        Last 20 UI/Deck events (shared)
   hooks/
@@ -46,14 +49,17 @@ src/
     useDeckScript.ts              Loads the SDK once and waits for element registration
   config/viewer.ts                DEMO_VIEWER_CONFIG and API_VIEWER_CONFIG
   data/presets.ts                 Audi preset IDs, labels, and PR strings
-  data/api-response-source.json   Sample configurator response (T-Cross, MY2027)
+  data/vw-payloads.ts             Labels and imports for the two VW sample payloads
+  data/configured.json            "Configured" payload (T-Cross Style Edition, D314BZ, MY2027)
+  data/stock.json                 "Stock" payload (T-Roc Black Edition, D115LE, MY2025)
   types/deck.ts                   StreamStatus, EventEntry, and the JSX typing for avp-3dws-deck
-  utils/create-pr-string.ts       createPrString, getVisiblePrCodes, normalizePrCode
+  utils/create-vw-pr-string.ts    createVwPrString, getFinishCode, getPrCodes, normalizePrCode
 ```
 
 `StreamControls` and `EventHistory` are shared by both `DeckControls` and
 `ApiResponseControls`. `DeckControls` adds the preset `<select>` and Reset button on
-top of them.
+top of them; `ParseApiResponse` passes `PayloadSelection` into `ApiResponseDeck` as
+children, and `ApiResponseControls` renders it above the PR string readout.
 
 ## State and Events
 
@@ -125,92 +131,97 @@ unchanged, including custom tokens such as `LC_PR_AEEXC034`.
 
 ## API Response Viewer
 
-`ApiResponseDeck` calls `createPrString(response)`. On failure it renders the error
-instead of mounting a Deck. On success it renders `ParsedVehicleDeck` with
-`key={prString}`, so a different response unmounts the previous viewer (stopping its
-stream) and mounts the new vehicle idle. The response's `exterior-front` image is
-shown as a preview while the stream is inactive; it is not a live 3D render.
+`ParseApiResponse` owns the selected payload (`configured` or `stock`, from
+`src/data/vw-payloads.ts`) and renders `ApiResponseDeck` with that payload's response.
+`ApiResponseDeck` calls `createVwPrString(response)`. On failure it renders the error
+(with the payload selector still available) instead of mounting a Deck. On success it
+renders `ParsedVehicleDeck` with `key={prString}`, so a different payload unmounts the
+previous viewer (stopping its stream) and mounts the new vehicle idle. The response's
+`exterior-front` image is shown as a preview while the stream is inactive; it is not a
+live 3D render.
 
-`src/utils/create-pr-string.ts` exports `createPrString`, `getVisiblePrCodes`, and
-`normalizePrCode`. The conversion follows the preset format:
+`src/utils/create-vw-pr-string.ts` exports `createVwPrString`, `getFinishCode`,
+`getPrCodes`, and `normalizePrCode`. Both VW payload shapes are handled by the same
+function and produce:
 
 ```text
-modelId,salesType,year,exterior,interior,visibleOptionCodes...
-30251,D314BZ,2027,1C1C,WG,0TD,...
+salesGroupId,engineCode,year,exterior,interior,prCodes...
+36613,D314BZ,2027,1C1C,WG,00A,0A2,0AS,...      (Configured)
+34785,D115LE,2025,2T2T,OC,AV0,A9I,B0A,...      (Stock)
 ```
 
 ### Anatomy of a PR string
 
 A PR string is a comma-separated list. The first five positions are fixed and
-identify the vehicle; everything after them is a variable-length list of option
-codes. Using the T-Cross fixture:
+identify the vehicle; everything after them is a variable-length list of equipment
+PR codes. Using the Configured (T-Cross) fixture:
 
 ```text
- 30251 , D314BZ , 2027 , 1C1C , WG , 0TD , 1AS , 1G8 , ... , ZBD
+ 36613 , D314BZ , 2027 , 1C1C , WG , 00A , 0A2 , 0AS , ... , ZBD
  ──┬──   ──┬───   ─┬──   ─┬──   ─┬   ─────────────┬──────────────
    │       │       │      │      │                │
-   │       │       │      │      │                └─ Option codes (0..n)
-   │       │       │      │      │                   specItems[].pr where visible === true
-   │       │       │      │      │                   "MZFM0TD" -> "0TD"   (M/G + family + value)
-   │       │       │      │      │                   "0TD"     -> "0TD"   (already bare)
-   │       │       │      │      │                   "LC_PR_…" -> "LC_PR_…" (custom token)
-   │       │       │      │      │                   duplicates and F14/F56 items dropped / also drop code that starts with u or U
+   │       │       │      │      │                └─ PR codes (0..n)
+   │       │       │      │      │                   every specItems[].pr, in document order
+   │       │       │      │      │                   "MKSUKA1" -> "KA1"   (M/G + family + value)
+   │       │       │      │      │                   each item's contentParts[] follow it
+   │       │       │      │      │                   emitted once; F14/F56 items, codes in
+   │       │       │      │      │                   replacedStandardSpecs[], and codes
+   │       │       │      │      │                   starting with "U" are dropped
    │       │       │      │      │
-   │       │       │      │      └─ Interior colour (2 chars)
-   │       │       │      │         configuration.interior  "F56     WG" -> "WG"
+   │       │       │      │      └─ Interior trim (2–4 chars)
+   │       │       │      │         first specItems[].pr starting "F56"  "F56     WG" -> "WG"
+   │       │       │      │         (falls back to configuration.interior)
    │       │       │      │
-   │       │       │      └─ Exterior colour (4 chars)
-   │       │       │         configuration.exterior  "F14 1C1C" -> "1C1C"
+   │       │       │      └─ Exterior paint (2–4 chars)
+   │       │       │         first specItems[].pr starting "F14"  "F14 1C1C" -> "1C1C"
+   │       │       │         (falls back to configuration.exterior)
    │       │       │
    │       │       └─ Model year (4 digits)
    │       │          derivative.year
    │       │
    │       └─ Engine code (6 chars)
-   │          derivative.derivativeId  "D314BZ-2027-MKSUKA1-…" -> first "-" first 6 characters
+   │          derivative.derivativeId  "D314BZ-2027-MKSUKA1-…" -> text before the first "-"
    │
-   └─ Model ID
-      derivative.modelId
+   └─ Sales group ID
+      derivative.salesGroupId
 ```
 
-| #   | Part       | Source field                    | Normalisation                         | Example         |
-| --- | ---------- | ------------------------------- | ------------------------------------- | --------------- |
-| 1   | Model ID   | `derivative.modelId`            | none (alphanumeric)                   | `30251`         |
-| 2   | Sales type | `derivative.derivativeId`       | text before the first `-`             | `D314BZ`        |
-| 3   | Model year | `derivative.year`               | none (4 digits)                       | `2027`          |
-| 4   | Exterior   | `configuration.exterior`        | strip `F14` prefix + padding          | `1C1C`          |
-| 5   | Interior   | `configuration.interior`        | strip `F56` prefix + padding          | `WG`            |
-| 6+  | Options    | `specItems[].pr` (visible only) | strip `M`/`G` + family prefix; dedupe | `0TD`, `1AS`, … |
+| #   | Part           | Source field                                            | Normalisation                                                     | Example         |
+| --- | -------------- | ------------------------------------------------------- | ----------------------------------------------------------------- | --------------- |
+| 1   | Sales group ID | `derivative.salesGroupId`                               | none (alphanumeric)                                               | `36613`         |
+| 2   | Engine code    | `derivative.derivativeId`                               | text before the first `-`, upper-cased                            | `D314BZ`        |
+| 3   | Model year     | `derivative.year`                                       | none (4 digits)                                                   | `2027`          |
+| 4   | Exterior       | `specItems[].pr` (`F14`), else `configuration.exterior` | strip `F14` prefix + padding                                      | `1C1C`          |
+| 5   | Interior       | `specItems[].pr` (`F56`), else `configuration.interior` | strip `F56` prefix + padding                                      | `WG`            |
+| 6+  | PR codes       | `specItems[].pr` + `specItems[].contentParts[]`         | strip `M`/`G` + family prefix; dedupe; drop `U*` and replaced specs | `00A`, `0A2`, … |
 
-Positions 1–5 are validated and `createPrString` throws if any is missing or
+Positions 1–5 are validated and `createVwPrString` throws if any is missing or
 malformed. Position 6 onwards is in `specItems` order and may be empty. The Audi
-presets in `src/data/presets.ts` follow the same layout; position 1 can be either
-an AVP model name (`etrongt`, `rsetrongt`) or a numeric model ID (`50644`).
+presets in `src/data/presets.ts` follow the same five-plus-options layout, with an
+AVP model name (`etrongt`, `rsetrongt`) or numeric model ID (`50644`) in position 1.
 
-The input type `VehicleApiResponse` needs `configuration.exterior` / `.interior`,
-`derivative.modelId` / `.derivativeId` / `.year` / `.title`, and `specItems[]` with
-`pr` and `visible`. The sales type is the first segment of `derivativeId`. Colour
-values come from `configuration.exterior` (`F14 1C1C` -> `1C1C`) and
-`configuration.interior` (`F56     WG` -> `WG`), with their F14/F56 family prefixes
-and padding removed. Only `specItems` explicitly marked `visible: true` contribute
-options; M/G-prefixed family codes (`MZFM0TD`) become their final three-character
-PR value (`0TD`). Duplicates and colour spec items are excluded. Hidden specs,
-`replacedStandardSpecs`, `monoselects`, and derivative package suffixes are not
-appended. Selected extras are expected to appear in the visible `specItems`;
-`configuration.extras` is not read.
+The input type `VwVehicleResponse` needs `configuration` (optional `exterior` /
+`interior`), `derivative.salesGroupId` / `.derivativeId` / `.year` / `.title`,
+`specItems[]` with `pr` and optional `contentParts`, and optional
+`replacedStandardSpecs[]`. Every `specItems` entry contributes a code whatever its
+`visible` flag or `title` — AVP needs body, door, and rim codes that the API marks
+`visible: false` or titles `"Missing text."`. Package children in `contentParts`
+are emitted directly after their package. The Stock payload's extra top-level fields
+(`buildable`, `exteriorMissing`, `interiorMissing`) and `configuration.extras`,
+`monoselects`, `prices`, and `images` play no part in the PR string; the bare 3-char
+tokens after the first `-` in a Stock `derivativeId` are likewise unused because the
+same equipment is present in `specItems`.
 
-Stock/order-style responses (`modelCode`, `modelYear`, `paint`, `upholstery`,
-`extensions`) use a different shape and are not supported without an adapter.
-
-Live rendering of the sample T-Cross against `v-3DExhibition-default-2025` and the
-API-to-AVP code mapping still require verification against the VW service
+Live rendering of the sample T-Cross and T-Roc against `v-3DExhibition-default-2025`
+and the API-to-AVP code mapping still require verification against the VW service
 configuration. No credentials are included in this repository.
 
 ## Future Integration Spikes
 
 - For new vehicles, the MSC configuration response includes `dataReferences`; its
   second entry points to the configurator response used to build the PR string.
-  Convert the API's configuration/options into the AVP format and omit options marked
-  `visible: false`. Stock-by-VIN and OPB are not configurable in this design.
+  Convert the API's configuration/options into the AVP format with
+  `createVwPrString`. Stock-by-VIN and OPB are not configurable in this design.
 - The carousel should open the full-screen viewer through a CTA. When configuration
   changes, request and persist a new MSC, validate that the configuration is buildable,
   then pass its generated PR string to AVP. This POC's presets demonstrate only the
@@ -234,7 +245,9 @@ npm run lint      # eslint .
 events. It covers preset selection and reset, status and capacity transitions,
 error persistence and retry, event history limits, malformed payloads, listener
 cleanup, the feature baseline, and the API viewer's PR string, stream handover, and
-parse-error display. `src/utils/create-pr-string.test.ts` covers the fixture's
-identity and colours, code normalization, hidden/duplicate exclusion, and rejection
-of malformed input. The tests do not download the SDK, allocate a streaming
+parse-error display, and switching between the Configured and Stock payloads on the
+page. `src/utils/create-vw-pr-string.test.ts` covers both fixtures' identity,
+finishes, and equipment counts, the `U` and `replacedStandardSpecs` exclusions,
+`contentParts` unpacking and deduplication, finish fallback to `configuration`, code
+normalization, and rejection of malformed input. The tests do not download the SDK, allocate a streaming
 instance, or verify live AVP rendering.

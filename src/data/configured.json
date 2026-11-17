@@ -16,22 +16,10 @@
     "year": "2027"
   },
   "prices": {
-    "total": {
-      "value": "30385",
-      "currency": "GBP"
-    },
-    "retail": {
-      "value": "30385",
-      "currency": "GBP"
-    },
-    "extras": {
-      "value": "0",
-      "currency": "GBP"
-    },
-    "firstYearFee": {
-      "value": "560",
-      "currency": "GBP"
-    }
+    "total": { "value": "30385", "currency": "GBP" },
+    "retail": { "value": "30385", "currency": "GBP" },
+    "extras": { "value": "0", "currency": "GBP" },
+    "firstYearFee": { "value": "560", "currency": "GBP" }
   },
   "images": [
     {

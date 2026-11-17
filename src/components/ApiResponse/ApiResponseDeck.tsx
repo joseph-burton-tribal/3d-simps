@@ -1,29 +1,34 @@
+import type { ReactNode } from "react";
 import type { VehiclePreset } from "../../data/presets";
+import type { VwPayload } from "../../data/vw-payloads";
 import { useDeck } from "../../hooks/useDeck";
-import {
-  createPrString,
-  type VehicleApiResponse,
-} from "../../utils/create-pr-string";
+import { createVwPrString } from "../../utils/create-vw-pr-string";
 import { API_VIEWER_CONFIG as VIEWER_CONFIG } from "../../config/viewer";
 import { ApiResponseControls } from "./ApiResponseControls";
 import "../../types/deck";
 
-type ApiResponse = VehicleApiResponse & {
-  images?: { rel: string; uri: string }[];
-};
+interface ApiResponseDeckProps {
+  response: VwPayload["response"];
+  // Rendered at the top of the controls panel, e.g. a payload selector.
+  children?: ReactNode;
+}
 
 function ParsedVehicleDeck({
   vehicle,
   image,
+  children,
 }: {
   vehicle: VehiclePreset;
   image?: string;
+  children?: ReactNode;
 }) {
   const { deckRef, ...stream } = useDeck([vehicle]);
 
   return (
     <div className="vehicle-workspace">
-      <ApiResponseControls vehicle={vehicle} stream={stream} />
+      <ApiResponseControls vehicle={vehicle} stream={stream}>
+        {children}
+      </ApiResponseControls>
       <div className="vehicle-stage api-vehicle-stage" aria-label="3D vehicle">
         <avp-3dws-deck
           ref={deckRef}
@@ -52,16 +57,21 @@ function ParsedVehicleDeck({
   );
 }
 
-export function ApiResponseDeck({ response }: { response: ApiResponse }) {
+export function ApiResponseDeck({ response, children }: ApiResponseDeckProps) {
   let prString: string;
   try {
-    prString = createPrString(response);
+    prString = createVwPrString(response);
   } catch (error) {
     return (
-      <p role="alert">
-        Unable to parse vehicle:{" "}
-        {error instanceof Error ? error.message : "Invalid API response."}
-      </p>
+      <div className="vehicle-workspace">
+        <aside className="vehicle-controls" aria-label="API vehicle configuration">
+          {children}
+          <p role="alert">
+            Unable to parse vehicle:{" "}
+            {error instanceof Error ? error.message : "Invalid API response."}
+          </p>
+        </aside>
+      </div>
     );
   }
 
@@ -76,6 +86,8 @@ export function ApiResponseDeck({ response }: { response: ApiResponse }) {
       image={
         response.images?.find((image) => image.rel === "exterior-front")?.uri
       }
-    />
+    >
+      {children}
+    </ParsedVehicleDeck>
   );
 }
