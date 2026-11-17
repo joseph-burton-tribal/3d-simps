@@ -81,6 +81,7 @@ export function getPrCodes(
   specItems: VwVehicleResponse["specItems"],
   replacedStandardSpecs: string[] = [],
 ): string[] {
+  // Initialize the set of excluded codes from replacedStandardSpecs.
   const excluded = new Set(replacedStandardSpecs.map(normalizePrCode));
   // Keep insertion order and silently ignores repeats, so adding the
   // same code twice leaves it in place the first time it was seen.
@@ -88,13 +89,16 @@ export function getPrCodes(
 
   const add = (value: string) => {
     const code = normalizePrCode(value);
+    // skip codes that start with "U" or are in the excluded set
     if (code.startsWith("U") || excluded.has(code)) return;
     codes.add(code);
   };
 
   for (const item of specItems) {
+    // skip items that are finish codes (F14/F56)
     if (FINISH_FAMILY.test(item.pr.trim())) continue;
     add(item.pr);
+    // add the item's content parts, skipping finish codes
     for (const child of item.contentParts ?? []) {
       if (!FINISH_FAMILY.test(child.trim())) add(child);
     }
