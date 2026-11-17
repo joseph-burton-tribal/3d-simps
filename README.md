@@ -100,10 +100,10 @@ partial `features` override enabling camera navigation, environments, zoom,
 fullscreen, Showroom Pro, and interior. AVP merges this override with the server-side
 `config-id` configuration.
 
-| Route | Export | `config-id` | `market` | `streaming-stage` |
-| --- | --- | --- | --- | --- |
-| `/default-demo` | `DEMO_VIEWER_CONFIG` | `audi-test` | `DEU` | `prelive-euw1` |
-| `/parse-api-response` | `API_VIEWER_CONFIG` | `v-3DExhibition-default-2025` | `GBR` | `prod-euw1` |
+| Route                 | Export               | `config-id`                   | `market` | `streaming-stage` |
+| --------------------- | -------------------- | ----------------------------- | -------- | ----------------- |
+| `/default-demo`       | `DEMO_VIEWER_CONFIG` | `audi-test`                   | `DEU`    | `prelive-euw1`    |
+| `/parse-api-response` | `API_VIEWER_CONFIG`  | `v-3DExhibition-default-2025` | `GBR`    | `prod-euw1`       |
 
 These values are hard-coded; there are no environment variables. They are demo
 settings, not a production configuration. Streaming still depends on AVP access,
@@ -138,6 +138,53 @@ shown as a preview while the stream is inactive; it is not a live 3D render.
 modelId,salesType,year,exterior,interior,visibleOptionCodes...
 30251,D314BZ,2027,1C1C,WG,0TD,...
 ```
+
+### Anatomy of a PR string
+
+A PR string is a comma-separated list. The first five positions are fixed and
+identify the vehicle; everything after them is a variable-length list of option
+codes. Using the T-Cross fixture:
+
+```text
+ 30251 , D314BZ , 2027 , 1C1C , WG , 0TD , 1AS , 1G8 , ... , ZBD
+ ──┬──   ──┬───   ─┬──   ─┬──   ─┬   ─────────────┬──────────────
+   │       │       │      │      │                │
+   │       │       │      │      │                └─ Option codes (0..n)
+   │       │       │      │      │                   specItems[].pr where visible === true
+   │       │       │      │      │                   "MZFM0TD" -> "0TD"   (M/G + family + value)
+   │       │       │      │      │                   "0TD"     -> "0TD"   (already bare)
+   │       │       │      │      │                   "LC_PR_…" -> "LC_PR_…" (custom token)
+   │       │       │      │      │                   duplicates and F14/F56 items dropped / also drop code that starts with u or U
+   │       │       │      │      │
+   │       │       │      │      └─ Interior colour (2 chars)
+   │       │       │      │         configuration.interior  "F56     WG" -> "WG"
+   │       │       │      │
+   │       │       │      └─ Exterior colour (4 chars)
+   │       │       │         configuration.exterior  "F14 1C1C" -> "1C1C"
+   │       │       │
+   │       │       └─ Model year (4 digits)
+   │       │          derivative.year
+   │       │
+   │       └─ Engine code (6 chars)
+   │          derivative.derivativeId  "D314BZ-2027-MKSUKA1-…" -> first "-" first 6 characters
+   │
+   └─ Model ID
+      derivative.modelId
+```
+
+| #   | Part       | Source field                    | Normalisation                         | Example         |
+| --- | ---------- | ------------------------------- | ------------------------------------- | --------------- |
+| 1   | Model ID   | `derivative.modelId`            | none (alphanumeric)                   | `30251`         |
+| 2   | Sales type | `derivative.derivativeId`       | text before the first `-`             | `D314BZ`        |
+| 3   | Model year | `derivative.year`               | none (4 digits)                       | `2027`          |
+| 4   | Exterior   | `configuration.exterior`        | strip `F14` prefix + padding          | `1C1C`          |
+| 5   | Interior   | `configuration.interior`        | strip `F56` prefix + padding          | `WG`            |
+| 6+  | Options    | `specItems[].pr` (visible only) | strip `M`/`G` + family prefix; dedupe | `0TD`, `1AS`, … |
+
+Positions 1–5 are validated and `createPrString` throws if any is missing or
+malformed. Position 6 onwards is in `specItems` order and may be empty. The Audi
+presets in `src/data/presets.ts` follow the same layout; position 1 can be either
+an AVP model name (`etrongt`, `rsetrongt`) or a numeric model ID (`50644`).
 
 The input type `VehicleApiResponse` needs `configuration.exterior` / `.interior`,
 `derivative.modelId` / `.derivativeId` / `.year` / `.title`, and `specItems[]` with
