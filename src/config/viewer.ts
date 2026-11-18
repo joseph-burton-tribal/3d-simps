@@ -5,14 +5,12 @@ export interface ViewerConfig {
   contentLanguage: string;
   initialCamera: string;
   multisessionDisconnect: boolean;
-  cameraFlight: "disabled" | "enabled";
   features: string;
 }
 
 const BASE_VIEWER_CONFIG = {
   initialCamera: "MRV1",
   multisessionDisconnect: true,
-  cameraFlight: "disabled" as const,
   features: JSON.stringify({
     cameraNavigation: true,
     interior: true,

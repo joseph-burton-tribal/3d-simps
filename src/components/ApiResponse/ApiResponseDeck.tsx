@@ -36,7 +36,6 @@ function ParsedVehicleDeck({
           pr-string={vehicle.prString}
           multisession-disconnect={VIEWER_CONFIG.multisessionDisconnect}
           streaming-stage={VIEWER_CONFIG.streamingStage}
-          camera-flight={VIEWER_CONFIG.cameraFlight}
           camera={VIEWER_CONFIG.initialCamera}
           features={VIEWER_CONFIG.features}
           config-id={VIEWER_CONFIG.configId}
