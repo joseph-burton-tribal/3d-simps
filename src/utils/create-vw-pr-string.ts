@@ -17,9 +17,9 @@ export interface VwVehicleResponse {
 
 // Paint finish codes start with a family prefix followed by whitespace:
 // "F14 1C1C" is an exterior paint, "F56     OC" is an interior trim.
-const EXTERIOR_FAMILY = /^F14\s/;
-const INTERIOR_FAMILY = /^F56\s/;
-const FINISH_FAMILY = /^F(?:14|56)\s/;
+const EXTERIOR_FAMILY = /^F14\s/; // exterior finish
+const INTERIOR_FAMILY = /^F56\s/; // interior finish
+const FINISH_FAMILY = /^F(?:14|56)\s/; // any finish (exterior or interior)
 
 // Converts code into the bare value AVP expects.
 // The API prefixes codes with their PR family; AVP wants the value only.
