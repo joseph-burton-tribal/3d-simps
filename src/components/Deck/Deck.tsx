@@ -49,6 +49,7 @@ export const Deck = () => {
           features={VIEWER_CONFIG.features}
           config-id={VIEWER_CONFIG.configId}
           market={VIEWER_CONFIG.market}
+          content-language={VIEWER_CONFIG.contentLanguage}
         ></avp-3dws-deck>
       </div>
     </div>

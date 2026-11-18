@@ -41,6 +41,7 @@ function ParsedVehicleDeck({
           features={VIEWER_CONFIG.features}
           config-id={VIEWER_CONFIG.configId}
           market={VIEWER_CONFIG.market}
+          content-language={VIEWER_CONFIG.contentLanguage}
         ></avp-3dws-deck>
         {!stream.active && image && (
           <img
@@ -64,7 +65,10 @@ export function ApiResponseDeck({ response, children }: ApiResponseDeckProps) {
   } catch (error) {
     return (
       <div className="vehicle-workspace">
-        <aside className="vehicle-controls" aria-label="API vehicle configuration">
+        <aside
+          className="vehicle-controls"
+          aria-label="API vehicle configuration"
+        >
           {children}
           <p role="alert">
             Unable to parse vehicle:{" "}

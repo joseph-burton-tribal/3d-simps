@@ -1,7 +1,8 @@
 export interface ViewerConfig {
   configId: string;
-  market: string;
   streamingStage: string;
+  market: string;
+  contentLanguage: string;
   initialCamera: string;
   multisessionDisconnect: boolean;
   cameraFlight: "disabled" | "enabled";
@@ -14,11 +15,17 @@ const BASE_VIEWER_CONFIG = {
   cameraFlight: "disabled" as const,
   features: JSON.stringify({
     cameraNavigation: true,
+    interior: true,
     environments: true,
     zoom: true,
     fullscreen: true,
+    animations: true,
+    trunkAnimations: true,
+    lightAnimations: true,
+    animationSpots: true,
+    cameraFlight: true,
     showroomPro: true,
-    interior: true,
+    close: false,
   }),
 };
 
@@ -26,14 +33,16 @@ const BASE_VIEWER_CONFIG = {
 export const DEMO_VIEWER_CONFIG: ViewerConfig = {
   ...BASE_VIEWER_CONFIG,
   configId: "audi-test",
-  market: "DEU",
   streamingStage: "prelive-euw1",
+  market: "DEU",
+  contentLanguage: "de",
 };
 
 // parse-api-response: VW vehicles derived from the configurator API.
 export const API_VIEWER_CONFIG: ViewerConfig = {
   ...BASE_VIEWER_CONFIG,
   configId: "v-3DExhibition-default-2025",
+  streamingStage: "prelive-euw1",
   market: "GBR",
-  streamingStage: "prod-euw1",
+  contentLanguage: "en",
 };
