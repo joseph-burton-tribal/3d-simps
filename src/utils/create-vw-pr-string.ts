@@ -15,13 +15,13 @@ export interface VwVehicleResponse {
   replacedStandardSpecs?: string[];
 }
 
-// Finish codes start with a family prefix followed by whitespace:
+// Paint finish codes start with a family prefix followed by whitespace:
 // "F14 1C1C" is an exterior paint, "F56     OC" is an interior trim.
 const EXTERIOR_FAMILY = /^F14\s/;
 const INTERIOR_FAMILY = /^F56\s/;
 const FINISH_FAMILY = /^F(?:14|56)\s/;
 
-// Converts one API code into the bare value AVP expects.
+// Converts code into the bare value AVP expects.
 // The API prefixes codes with their PR family; AVP wants the value only.
 export function normalizePrCode(value: string): string {
   const code = value.trim();
@@ -83,7 +83,8 @@ export function getPrCodes(
 ): string[] {
   // Initialize the set of excluded codes from replacedStandardSpecs.
   const excluded = new Set(replacedStandardSpecs.map(normalizePrCode));
-  // Keep insertion order and silently ignores repeats, so adding the
+
+  // Keeps insertion order and silently ignores repeats, so adding the
   // same code twice leaves it in place the first time it was seen.
   const codes = new Set<string>();
 
