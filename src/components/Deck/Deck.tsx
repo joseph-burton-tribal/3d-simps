@@ -44,7 +44,6 @@ export const Deck = () => {
           pr-string={selectedVehicle.prString}
           multisession-disconnect={VIEWER_CONFIG.multisessionDisconnect}
           streaming-stage={VIEWER_CONFIG.streamingStage}
-          camera={VIEWER_CONFIG.initialCamera}
           features={VIEWER_CONFIG.features}
           config-id={VIEWER_CONFIG.configId}
           market={VIEWER_CONFIG.market}

@@ -3,14 +3,12 @@ export interface ViewerConfig {
   streamingStage: string;
   market: string;
   contentLanguage: string;
-  initialCamera: string;
   multisessionDisconnect: boolean;
   hideConsumptionData: boolean;
   features: string;
 }
 
 const BASE_VIEWER_CONFIG = {
-  initialCamera: "MRV1",
   multisessionDisconnect: true,
   hideConsumptionData: true,
   features: JSON.stringify({
