@@ -37,6 +37,8 @@ export const DEMO_VIEWER_CONFIG: ViewerConfig = {
 };
 
 // parse-api-response: VW vehicles derived from the configurator API.
+
+// CHECK THESE SETTINGS - AS THEY'RE NOT WORKING //
 export const API_VIEWER_CONFIG: ViewerConfig = {
   ...BASE_VIEWER_CONFIG,
   configId: "v-3DExhibition-default-2025",
