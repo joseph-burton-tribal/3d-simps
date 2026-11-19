@@ -32,8 +32,8 @@ const BASE_VIEWER_CONFIG = {
 // parse-api-response: VW configurator and stock API derived vehicles.
 export const API_VIEWER_CONFIG: ViewerConfig = {
   ...BASE_VIEWER_CONFIG,
-  configId: "v-3DExhibition-default-2025",
-  streamingStage: "prod-euw1", // prelive-euw1
+  configId: "v-3DExhibition-default-2025", // Showroom: v-3DExhibition-default-2025, OPB: v-dga-default-my2025
+  streamingStage: "prod-euw1", // prelive-euw1 // qa-euw1 // prod-euw1
   market: "GBR",
   contentLang: "en",
 };
@@ -41,8 +41,8 @@ export const API_VIEWER_CONFIG: ViewerConfig = {
 // default-demo: Audi presets on the AVP demo config.
 export const DEMO_VIEWER_CONFIG: ViewerConfig = {
   ...BASE_VIEWER_CONFIG,
-  configId: "audi-test",
-  streamingStage: "prod-euw1", // prelive-euw1
+  configId: "audi-test", // example
+  streamingStage: "prod-euw1", // prelive-euw1 // qa-euw1 // prod-euw1
   market: "DEU",
   contentLang: "de",
 };
