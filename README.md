@@ -2,8 +2,8 @@
 
 A React and TypeScript proof of concept using the AVP streaming web component
 (`<avp-3dws-deck>`). It has two routes: a demo driven by Audi PR-string presets,
-and a viewer that derives its PR string from Volkswagen configurator API responses
-("Configured" and "Stock" payloads).
+and a viewer that derives its PR string from Volkswagen configurator and stock API
+responses ("Configured" and "Stock" payloads).
 
 ## Run
 
@@ -100,31 +100,48 @@ change does not leave a stream running and consuming resources.
 
 ## Viewer Settings
 
-`src/config/viewer.ts` defines one `ViewerConfig` per route. Both share a base:
-`MRV1` initial camera, `multisession-disconnect` on, `camera-flight="disabled"`, and a
-partial `features` override enabling camera navigation, environments, zoom,
-fullscreen, Showroom Pro, and interior. AVP merges this override with the server-side
-`config-id` configuration.
+`src/config/viewer.ts` defines one `ViewerConfig` per route. Both share
+`BASE_VIEWER_CONFIG`, which carries the attributes the AVP 3dWS Solution Design v1.0
+requires on every embed, and the full Showroom `features` baseline.
 
-| Route                 | Export               | `config-id`                   | `market` | `streaming-stage` |
-| --------------------- | -------------------- | ----------------------------- | -------- | ----------------- |
-| `/default-demo`       | `DEMO_VIEWER_CONFIG` | `audi-test`                   | `DEU`    | `prelive-euw1`    |
-| `/parse-api-response` | `API_VIEWER_CONFIG`  | `v-3DExhibition-default-2025` | `GBR`    | `prod-euw1`       |
+| Attribute                 | Value                                                       | Notes                                                                        |
+| ------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `config-id`               | `v-3DExhibition-default-2025` (VW) / `audi-test` (Audi demo) | Selects the server-side CMS config (cameras, environments, animations, etc.) |
+| `streaming-stage`         | `prod-euw1`                                                 | Must be explicit; omitting it defaults to `qa-euw1`                         |
+| `market`                  | `GBR` (VW) / `DEU` (Audi demo)                              | Sent as a matchmaker header with `brand` and `service` from the CMS config   |
+| `content-lang`            | `en` (VW) / `de` (Audi demo)                                | UI language                                                                  |
+| `multisession-disconnect` | `true`                                                      | Required by the design                                                       |
+| `hide-consumption-data`   | `true`                                                      | Required by the design                                                       |
+| `ave-message-timeout`     | `15`                                                        | Seconds before a hung AVE command raises an exception                        |
+| `features`                | JSON, see below                                             | Deep-merged over the CMS `features`; attribute keys win                      |
+| `active` / `pr-string`    | runtime                                                     | Set by `useDeck`; connection attributes above are present before `active`    |
 
-These values are hard-coded; there are no environment variables. They are demo
-settings, not a production configuration. Streaming still depends on AVP access,
-network connectivity, and available rendering capacity. The enabled Showroom Pro
-feature also depends on its separate API and authentication service. The requested
-rotate behavior has no separate feature flag in the published Deck feature list, so
-AVP's default rotation behavior is left unchanged. Showroom Pro option data,
-authentication, and any option-specific camera mappings still need to come from the
-integrating app.
+`features` sets all twelve `DeckFeatureFlags` keys from the design's Showroom column:
+`cameraNavigation`, `interior`, `environments`, `zoom`, `fullscreen`, `animations`,
+`trunkAnimations`, `lightAnimations`, `animationSpots`, `cameraFlight`, `showroomPro`
+are `true` and `close` is `false` (the host UI owns closing). They are all listed
+explicitly rather than relying on CMS inheritance; `zoom` is the one key where the
+VW CMS config says `false` and this override is what turns it on. For an OPB embed
+the design uses `config-id="v-dga-default-my2025"` with `showroomPro: false`.
 
-The built-in AVP loading UI is retained; a custom overlay can be added using the
-lifecycle events. AVP also supports responsive font-size CSS variables and a `layout`
-override; assess those against the host layout before forcing values. Production
-hosts must allow-list the AVP and regional Kinesis Video domains listed in the
-[AVP network requirements](https://avp-3dws-deck.eu-west-1-web-streaming.avp.tech/docs/index.html).
+No `camera`, `camera-flight`, `design`, or `layout` attributes are set. The CMS
+config decides the initial camera (`defaultCamera` for VW) and camera list; `camera`
+is still typed in `src/types/deck.ts` for dynamic camera changes. `initial-camera`
+is **not** a real attribute (`initialCamera` only exists inside the CMS config) and
+was removed.
+
+These values are hard-coded; there are no environment variables. Streaming still
+depends on AVP access, network connectivity, and free rendering capacity on the
+`brand`/`service`/`market` pool (the VW `3dexhibition` pool has reported as few as
+one instance). Showroom Pro also depends on its own API and authentication service,
+which this POC does not provide.
+
+The SDK is loaded from
+`https://avp-3dws-deck.eu-west-1-web-streaming.avp.tech/avp-3dws-deck.js`, which
+redirects to the current versioned bundle. The design document names
+`deck-bundle.js` at the same host; that path returns 403 and should not be used.
+Production hosts must allow-list the AVP and regional Kinesis Video domains listed
+in the [AVP network requirements](https://avp-3dws-deck.eu-west-1-web-streaming.avp.tech/docs/index.html).
 
 Configurator URLs are not accepted or parsed. PR strings are passed to AVP
 unchanged, including custom tokens such as `LC_PR_AEEXC034`.
@@ -216,21 +233,69 @@ Live rendering of the sample T-Cross and T-Roc against `v-3DExhibition-default-2
 and the API-to-AVP code mapping still require verification against the VW service
 configuration. No credentials are included in this repository.
 
-## Future Integration Spikes
+## Data Sources (Showroom App and OPB)
 
-- For new vehicles, the MSC configuration response includes `dataReferences`; its
-  second entry points to the configurator response used to build the PR string.
-  Convert the API's configuration/options into the AVP format with
-  `createVwPrString`. Stock-by-VIN and OPB are not configurable in this design.
-- The carousel should open the full-screen viewer through a CTA. When configuration
-  changes, request and persist a new MSC, validate that the configuration is buildable,
-  then pass its generated PR string to AVP. This POC's presets demonstrate only the
-  final PR-string handoff; they do not call the VW configuration APIs.
-- Confirm Showroom Pro's API/auth flow and update behavior against real selectable
-  options. Verify selected parts against the returned configuration, define stream
-  outage/fallback behavior, and test mobile sizing, hidden-tab stream shutdown,
-  stream performance, culling/quality options, and loading customization.
-- OPB integration, tracking, and production error-handling requirements remain TBC.
+The two fixtures stand in for the live fetches below. All four paths end at the same
+configurator payload shape (`derivative`, `configuration`, `specItems`,
+`replacedStandardSpecs`, `images`), so `createVwPrString` handles every case. Paths
+were verified against `https://preprod.volkswagen.co.uk` (all return 200 with
+`salesGroupId` and `year` as strings, as the parser expects).
+
+| Surface   | Vehicle    | Step 1                                                              | Step 2 → configurator payload                                                             |
+| --------- | ---------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Showroom  | Configured | `GET /api/car/v1/car/configuration/{MSC}?price=true&images=false`  | `GET {base}{summary.dataReferences[1]}` (already starts `/api/configurator/2.3/…`)        |
+| Showroom  | Stock      | —                                                                   | `GET /api/stock-data-service/v1/stock/{VIN}/configuration`                                |
+| OPB       | Configured | `GET /api/pdb/2.2/pdb/{brochureId}/{MSC}`                           | `GET {base}/api/configurator{capi.configurationEndpoint}` (value starts `/2.3/…`)         |
+| OPB       | Stock      | `GET /api/pdb/2.2/pdb/{brochureId}/vin/{VIN}` → `stockVehicle.vin`  | `GET /api/stock-data-service/v1/stock/{VIN}/configuration`                                |
+
+Notes:
+
+- `MSC` is the Marketing Short Code. In the Showroom App every configuration change
+  issues a new MSC once OKAPI confirms it is buildable; re-run the new payload through
+  `createVwPrString` and update `pr-string` on the mounted element. The Deck diffs it
+  over the open WebRTC channel without remounting. OPB configurations are static.
+- The OPB PDB response also exposes `capi.configuratorEndpoint` (a bare
+  `/{modelId}/{salesGroupId}/{derivativeId}/…` fragment). For configured vehicles it
+  is equivalent to `configurationEndpoint`; for stock vehicles the configurator API
+  returns 424 for it, so always use the VIN route for stock.
+- Fixture provenance: `configured.json` is the Showroom Configured response for MSC
+  `VHSTBGCQ`; `stock.json` is the stock-data-service response for VIN
+  `WVGZZZA12SV083246`.
+
+## Showroom App Integration Checklist
+
+What this POC proves: payload → PR string, the attribute set, the event wiring in
+`useDeck`, and a clean stop on unmount. The items below are required by the Solution
+Design but are **not** implemented here and must be built in the Showroom App.
+
+- **Pre-stream validation.** If the configurator or stock fetch fails (4xx/5xx/timeout)
+  or `createVwPrString` throws, do not mount `<avp-3dws-deck>`; keep the 2D `images[]`
+  carousel. The POC shows the parse error inline instead.
+- **Readiness gate.** On `readiness` with `isReady: false`, hide the 3D CTA. The POC
+  only displays the value.
+- **Exception severity.** `exception` events carry `severity: "CRITICAL" | "NON_CRITICAL"`.
+  CRITICAL codes (`AVE_CAR_NOT_INSTALLED`, `NO_INSTANCES_AVAILABLE`,
+  `WEBRTC_CONNECTION_FAILED`, `AVE_SESSION_INITIALIZATION_FAILED`,
+  `AVE_ENVIRONMENT_NOT_INSTALLED`, `CONFIGURATION_ERROR`, `PR_STRING_NOT_PROVIDED`)
+  must fall back to the 2D carousel; NON_CRITICAL (for example an unsupported camera
+  name) must only be logged. `useDeck` currently treats every `error`/`exception` as
+  fatal and sets `active` to `false`.
+- **Disconnect handling.** On `disconnected`, return to 2D or show a "Resume 3D" CTA.
+- **Lifecycle release.** Remove `active` on unmount (done here), after 60 s with the
+  tab hidden (`visibilitychange`), and after 60 s out of viewport
+  (`IntersectionObserver`). Always keep `multisession-disconnect`.
+- **Slow networks.** When `navigator.connection?.effectiveType` is `slow-2g`, `2g`,
+  or `3g`, default to the 2D carousel and keep 3D behind an explicit CTA.
+- **Showroom Pro sync.** The design asks the host to listen for
+  `update:SelectConfiguration` to keep MSC state in step with in-stream selections.
+  That event name does not exist in deck bundle v1.111.0; confirm the event with AVP
+  before relying on it. `useDeck` listens for `update:active`, `update:camera`,
+  `update:pr-string`, and `update:camera-flight`.
+- **OPB variant.** Use `config-id="v-dga-default-my2025"` and `showroomPro: false`;
+  all other attributes and flags are identical.
+- **Custom loader and tracking.** Replace the built-in loading UI via the lifecycle
+  events if required, and add the analytics events listed in the design (3D vs 2D
+  time, interior views, camera switches, camera flights, live option changes).
 
 ## Checks
 
@@ -244,10 +309,13 @@ npm run lint      # eslint .
 `src/hooks/useDeck.test.tsx` renders both viewers in jsdom and dispatches Deck
 events. It covers preset selection and reset, status and capacity transitions,
 error persistence and retry, event history limits, malformed payloads, listener
-cleanup, the feature baseline, and the API viewer's PR string, stream handover, and
-parse-error display, and switching between the Configured and Stock payloads on the
-page. `src/utils/create-vw-pr-string.test.ts` covers both fixtures' identity,
-finishes, and equipment counts, the `U` and `replacedStandardSpecs` exclusions,
-`contentParts` unpacking and deduplication, finish fallback to `configuration`, code
-normalization, and rejection of malformed input. The tests do not download the SDK, allocate a streaming
-instance, or verify live AVP rendering.
+cleanup, the attribute baseline (all twelve `features` flags, `content-lang`,
+`hide-consumption-data`, `ave-message-timeout`, `multisession-disconnect`, and the
+absence of `camera`/`camera-flight`/`initial-camera`), and the API viewer's PR
+string, stream handover, and parse-error display, and switching between the
+Configured and Stock payloads on the page. `src/utils/create-vw-pr-string.test.ts`
+covers both fixtures' identity, finishes, and equipment counts, the `U` and
+`replacedStandardSpecs` exclusions, `contentParts` unpacking and deduplication,
+finish fallback to `configuration`, code normalization, and rejection of malformed
+input. The tests do not download the SDK, allocate a streaming instance, or verify
+live AVP rendering.
