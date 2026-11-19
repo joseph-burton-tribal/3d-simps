@@ -27,6 +27,9 @@ type DeckAttributes = HTMLAttributes<HTMLElement> & {
   features?: string;
   "streaming-stage"?: string;
   "multisession-disconnect"?: boolean;
+  "content-lang"?: string;
+  "hide-consumption-data"?: boolean;
+  "ave-message-timeout"?: number;
 };
 
 // Let TypeScript check the AVP custom element in JSX.

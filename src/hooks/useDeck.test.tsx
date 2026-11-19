@@ -37,6 +37,11 @@ describe("API response viewer", () => {
     expect(deck.getAttribute("streaming-stage")).toBe(
       API_VIEWER_CONFIG.streamingStage,
     );
+    expect(deck.getAttribute("content-lang")).toBe("en");
+    expect(deck.hasAttribute("hide-consumption-data")).toBe(true);
+    expect(deck.getAttribute("ave-message-timeout")).toBe("15");
+    expect(deck.hasAttribute("camera")).toBe(false);
+    expect(deck.hasAttribute("camera-flight")).toBe(false);
     expect(screen.queryByRole("combobox")).toBeNull();
     expect(screen.getByRole("img").getAttribute("src")).toBe(
       source.images?.find((image) => image.rel === "exterior-front")?.uri,
@@ -131,14 +136,28 @@ describe("Deck controls and events", () => {
   it("enables the showroom feature baseline", () => {
     const { deck } = renderViewer();
 
-    expect(deck.getAttribute("camera-flight")).toBe("disabled");
+    // camera-flight / camera / initial-camera are no longer set; the CMS
+    // config decides those. The SOW attributes must be present.
+    expect(deck.hasAttribute("camera-flight")).toBe(false);
+    expect(deck.hasAttribute("camera")).toBe(false);
+    expect(deck.hasAttribute("initial-camera")).toBe(false);
+    expect(deck.getAttribute("content-lang")).toBe("de");
+    expect(deck.hasAttribute("hide-consumption-data")).toBe(true);
+    expect(deck.getAttribute("ave-message-timeout")).toBe("15");
+    expect(deck.hasAttribute("multisession-disconnect")).toBe(true);
     expect(JSON.parse(deck.getAttribute("features") ?? "{}")).toEqual({
       cameraNavigation: true,
+      interior: true,
       environments: true,
       zoom: true,
       fullscreen: true,
+      animations: true,
+      trunkAnimations: true,
+      lightAnimations: true,
+      animationSpots: true,
+      cameraFlight: true,
       showroomPro: true,
-      interior: true,
+      close: false,
     });
   });
 

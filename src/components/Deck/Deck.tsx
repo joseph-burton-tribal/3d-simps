@@ -36,7 +36,6 @@ export const Deck = () => {
         onStop={stopStream}
         onClearEvents={clearEvents}
       />
-
       <div className="vehicle-stage" aria-label="3D vehicle">
         <avp-3dws-deck
           ref={deckRef}
@@ -47,7 +46,9 @@ export const Deck = () => {
           features={VIEWER_CONFIG.features}
           config-id={VIEWER_CONFIG.configId}
           market={VIEWER_CONFIG.market}
-          content-language={VIEWER_CONFIG.contentLanguage}
+          content-lang={VIEWER_CONFIG.contentLang}
+          hide-consumption-data={VIEWER_CONFIG.hideConsumptionData}
+          ave-message-timeout={VIEWER_CONFIG.aveMessageTimeout}
         ></avp-3dws-deck>
       </div>
     </div>

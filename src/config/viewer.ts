@@ -2,15 +2,17 @@ export interface ViewerConfig {
   configId: string;
   streamingStage: string;
   market: string;
-  contentLanguage: string;
+  contentLang: string;
   multisessionDisconnect: boolean;
   hideConsumptionData: boolean;
+  aveMessageTimeout: number;
   features: string;
 }
 
 const BASE_VIEWER_CONFIG = {
   multisessionDisconnect: true,
   hideConsumptionData: true,
+  aveMessageTimeout: 15,
   features: JSON.stringify({
     cameraNavigation: true,
     interior: true,
@@ -27,22 +29,20 @@ const BASE_VIEWER_CONFIG = {
   }),
 };
 
+// parse-api-response: VW configurator and stock API derived vehicles.
+export const API_VIEWER_CONFIG: ViewerConfig = {
+  ...BASE_VIEWER_CONFIG,
+  configId: "v-3DExhibition-default-2025",
+  streamingStage: "prod-euw1", // prelive-euw1
+  market: "GBR",
+  contentLang: "en",
+};
+
 // default-demo: Audi presets on the AVP demo config.
 export const DEMO_VIEWER_CONFIG: ViewerConfig = {
   ...BASE_VIEWER_CONFIG,
   configId: "audi-test",
-  streamingStage: "prelive-euw1",
+  streamingStage: "prod-euw1", // prelive-euw1
   market: "DEU",
-  contentLanguage: "de",
-};
-
-// parse-api-response: VW vehicles derived from the configurator API.
-
-// CHECK THESE SETTINGS - AS THEY'RE NOT WORKING //
-export const API_VIEWER_CONFIG: ViewerConfig = {
-  ...BASE_VIEWER_CONFIG,
-  configId: "v-3DExhibition-default-2025",
-  streamingStage: "prelive-euw1",
-  market: "GBR",
-  contentLanguage: "en",
+  contentLang: "de",
 };

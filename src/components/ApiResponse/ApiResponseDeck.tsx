@@ -39,7 +39,9 @@ function ParsedVehicleDeck({
           features={VIEWER_CONFIG.features}
           config-id={VIEWER_CONFIG.configId}
           market={VIEWER_CONFIG.market}
-          content-language={VIEWER_CONFIG.contentLanguage}
+          content-lang={VIEWER_CONFIG.contentLang}
+          hide-consumption-data={VIEWER_CONFIG.hideConsumptionData}
+          ave-message-timeout={VIEWER_CONFIG.aveMessageTimeout}
         ></avp-3dws-deck>
         {!stream.active && image && (
           <img
