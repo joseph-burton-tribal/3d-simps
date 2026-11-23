@@ -19,17 +19,15 @@ export interface EventEntry {
 type DeckAttributes = HTMLAttributes<HTMLElement> & {
   ref?: Ref<HTMLElement>;
   active?: boolean;
-  market?: string;
   "pr-string"?: string;
-  camera?: string;
-  "camera-flight"?: "disabled" | "enabled";
-  "config-id": string;
-  features?: string;
-  "streaming-stage"?: string;
   "multisession-disconnect"?: boolean;
-  "content-lang"?: string;
   "hide-consumption-data"?: boolean;
   "ave-message-timeout"?: number;
+  features?: string;
+  "config-id": string;
+  "streaming-stage"?: string;
+  market?: string;
+  "content-lang"?: string;
 };
 
 // Let TypeScript check the AVP custom element in JSX.

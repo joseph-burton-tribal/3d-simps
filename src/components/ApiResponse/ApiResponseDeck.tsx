@@ -35,13 +35,13 @@ function ParsedVehicleDeck({
           active={stream.active}
           pr-string={vehicle.prString}
           multisession-disconnect={VIEWER_CONFIG.multisessionDisconnect}
-          streaming-stage={VIEWER_CONFIG.streamingStage}
-          features={VIEWER_CONFIG.features}
-          config-id={VIEWER_CONFIG.configId}
-          market={VIEWER_CONFIG.market}
-          content-lang={VIEWER_CONFIG.contentLang}
           hide-consumption-data={VIEWER_CONFIG.hideConsumptionData}
           ave-message-timeout={VIEWER_CONFIG.aveMessageTimeout}
+          features={VIEWER_CONFIG.features}
+          config-id={VIEWER_CONFIG.configId}
+          streaming-stage={VIEWER_CONFIG.streamingStage}
+          market={VIEWER_CONFIG.market}
+          content-lang={VIEWER_CONFIG.contentLang}
         ></avp-3dws-deck>
         {!stream.active && image && (
           <img

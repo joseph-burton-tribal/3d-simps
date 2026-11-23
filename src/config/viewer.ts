@@ -1,12 +1,12 @@
 export interface ViewerConfig {
-  configId: string;
-  streamingStage: string;
-  market: string;
-  contentLang: string;
   multisessionDisconnect: boolean;
   hideConsumptionData: boolean;
   aveMessageTimeout: number;
   features: string;
+  configId: string;
+  streamingStage: string;
+  market: string;
+  contentLang: string;
 }
 
 const BASE_VIEWER_CONFIG = {
